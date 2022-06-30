@@ -1,0 +1,10 @@
+ciliumImage: tkestack/cilium:v1.9.5
+ciliumOperatorImage: tkestack/cilium-operator-generic:v1.9.5
+ipamdImage: tkestack/tke-eni-ipamd:v3.3.3
+masqImage: tkestack/ip-masq-agent:v1.0.0
+ciliumRouterImage: tkestack/cilium-router:v0.1.0
+networkMode: overlay
+clusterCIDR: 
+# 实际没有用到
+# maskSize: 
+maxNodePodNum: 

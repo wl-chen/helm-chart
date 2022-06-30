@@ -1,0 +1,253 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: tke-gateway
+  namespace: tke
+  annotations:
+    tke.prometheus.io/scrape: "true"
+    prometheus.io/scheme: https
+    prometheus.io/port: "9441"
+spec:
+  selector:
+    app: tke-gateway
+  type: NodePort
+  ports:
+    - name: http
+      nodePort: 31180
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: https
+      nodePort: 31443
+      port: 443
+      protocol: TCP
+      targetPort: 443
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tke-gateway
+  namespace: tke
+spec:
+  selector:
+    matchLabels:
+      app: tke-gateway
+  template:
+    metadata:
+      labels:
+        app: tke-gateway
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: tke-gateway
+          image: {{ .Values.image }}
+          command:
+            - /bin/sh
+            - -c 
+            - >
+              ln -s /app/certs/cluster/etcd-ca.crt /app/certs/etcd-ca.crt;
+              ln -s /app/certs/cluster/etcd.crt /app/certs/etcd.crt;
+              ln -s /app/certs/cluster/etcd.key /app/certs/etcd.key;
+              ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
+              ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
+              ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
+              ln -s /app/certs/cert-manager/admin.crt /app/certs/admin.crt;
+              ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
+              ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
+              ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
+              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
+              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
+              /app/bin/tke-gateway -C=/app/conf/tke-gateway.toml --oidc-client-secret=$(OIDC_CLIENT_SECRET);
+          env:
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: tke-auth-cluster-certs
+                  key: oidc-client-secret
+                  optional: false
+          volumeMounts:
+            - name: cert-manager-certs
+              mountPath: /app/certs/cert-manager
+            - name: cluster-certs
+              mountPath: /app/certs/cluster
+            - name: certs
+              mountPath: /app/certs
+            - name: tke-gateway-volume
+              mountPath: /app/conf
+          readinessProbe:
+            httpGet:
+              port: 80
+              path: /healthz
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              port: 80
+              path: /healthz
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: 100m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+      volumes:
+        - name: tke-gateway-volume
+          configMap:
+            name: tke-gateway
+        - name: certs
+          emptyDir: {}
+        - name: cluster-certs
+          hostPath:
+            path: {{ .Values.certificate.mountPath }}
+            type: Directory
+        - name: cert-manager-certs
+          projected:
+            sources:
+            - secret:
+                name: tke-ca
+                items:
+                - key: tls.crt
+                  path: ca.crt
+                - key: tls.key
+                  path: ca.key
+                optional: false
+            - secret:
+                name: tke-auth-server-secret
+                items:
+                - key: tls.crt
+                  path: server.crt
+                - key: tls.key
+                  path: server.key
+                optional: false
+            - secret:
+                name: tke-ca-admin
+                items:
+                - key: tls.crt
+                  path: admin.crt
+                - key: tls.key
+                  path: admin.key
+                optional: false
+            - secret:
+                name: tke-ca-webhook
+                items:
+                - key: tls.crt
+                  path: webhook.crt
+                - key: tls.key
+                  path: webhook.key
+                optional: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tke-gateway
+  namespace: tke
+data:
+  tke-gateway.toml: |
+    gateway_config = "/app/conf/tke-gateway-config.yaml"
+
+    [authentication]
+
+      [authentication.oidc]
+      client_id = "default"
+      issuer_url = "https://tke-auth-api/oidc"
+      ca_file = "/app/certs/ca.crt"
+      username_prefix ="-"
+      username_claim = "name"
+      groups_claim = "groups"
+      tenantid_claim = "federated_claims"
+
+    [insecure_serving]
+    port = 80
+
+    [secure_serving]
+    port = 443
+    tls_cipher_suites = ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_GCM_SHA256", "TLS_RSA_WITH_AES_256_GCM_SHA384", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA"]
+{{- if .Values.selfSigned }}
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+{{- else }}
+    tls_cert_file = "/app/conf/server.crt"
+    tls_private_key_file = "/app/conf/server.key"
+{{- end }}
+
+  tke-gateway-config.yaml: |
+    apiVersion: gateway.config.tkestack.io/v1
+    kind: GatewayConfiguration
+{{- if .Values.enableAuth }}
+    auth:
+      defaultTenant: {{ .Values.tenantID }}
+{{- end }}
+{{- if .Values.enableRegistry }}
+    registry:
+      defaultTenant: {{ .Values.tenantID }}
+      domainSuffix: {{ .Values.registryDomainSuffix }}
+{{- end }}
+    components:
+{{- if .Values.enableAuth }}
+      auth:
+        address: https://tke-auth-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+      platform:
+        address: https://tke-platform-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- if .Values.enableBusiness }}
+      business:
+        address: https://tke-business-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableMonitor }}
+      monitor:
+        address: https://tke-monitor-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+      notify:
+        address: https://tke-notify-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableRegistry }}
+      registry:
+        address: https://tke-registry-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableLogagent }}
+      logagent:
+        address: https://tke-logagent-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableAudit }}
+      audit:
+        address: https://tke-audit-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableApplication }}
+      application:
+        address: https://tke-application-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableMesh }}
+      mesh:
+        address: https://tke-mesh-api
+        passthrough:
+          caFile: /app/certs/ca.crt
+{{- end }}
+{{- if not .Values.selfSigned }}
+  server.crt: |
+{{ .Values.serverCrt | indent 4 }}
+  server.key: |
+{{ .Values.serverKey | indent 4 }}
+{{- end }}

@@ -1,0 +1,58 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gateway
+  namespace: tke
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 1000m
+    nginx.ingress.kubernetes.io/proxy-buffer-size: 10k
+    cert-manager.io/issuer: "tke-ca"
+spec:
+  tls:
+    - hosts:
+        - tke-gateway
+        - gateway
+        - tke-gateway.tke.svc
+{{ if .Values.certificate.dnsNames }}
+{{ toYaml .Values.certificate.dnsNames | indent 8 }}
+{{ end }} 
+{{ if .Values.certificate.uris }}
+{{ toYaml .Values.certificate.uris | indent 8 }}
+{{ end }}
+        - 127.0.0.1
+{{ if .Values.certificate.ipAddresses }}
+{{ toYaml .Values.certificate.ipAddresses | indent 8 }}
+{{ end }}
+      secretName: tke-gateway-server-secret
+  rules:
+    - host: "registry.tke.com"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: tke-gateway
+                port:
+                  number: 80
+    - host: "*.registry.tke.com"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: tke-gateway
+                port:
+                  number: 80
+    - host: "tke-gateway"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: tke-gateway
+                port:
+                  number: 80
+  ingressClassName: nginx

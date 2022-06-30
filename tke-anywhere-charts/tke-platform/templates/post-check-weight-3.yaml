@@ -1,0 +1,34 @@
+{{- if and .Values.api.clusterContext .Values.api.clusterCredentialsContext -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tke-platform-post-check
+  namespace: tke
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  labels:
+    app: tke-platform-post-check
+spec:
+  template:
+    metadata:
+      labels:
+        app: tke-platform-post-check
+    spec:
+      serviceAccountName: tke-hook-user
+      containers:
+        - name: kubectl
+          image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
+          command: ['/bin/sh']
+          args:
+            - "-c"
+            - |
+              cat <<EOF | kubectl create -f -
+{{ .Values.api.clusterContext | indent 14 }}
+              ---
+{{ .Values.api.clusterCredentialsContext | indent 14 }}
+              EOF
+      restartPolicy: OnFailure
+{{- end -}}

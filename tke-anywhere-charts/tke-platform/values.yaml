@@ -1,0 +1,39 @@
+etcd:
+  host: https://172.19.0.2:2379
+# 必填 公网可访问的集群IP
+publicIP: 43.156.24.48
+metricsServerImage: tkestack/metrics-server:v0.3.6
+addonResizerImage: tkestack/addon-resizer:1.8.11
+api:
+  replicas: 1
+  image: "tkestack/tke-platform-api-amd64:v1.9.0"
+  enableAuth: true
+  enableAudit: 
+  # OIDC认证方式客户端id，默认为default
+  oIDCClientID: default
+  # OIDC认证方式的issuer_url，默认为https://tke-auth-api/oidc
+  oIDCIssuerURL: https://tke-auth-api/oidc
+  # 是否开启OIDC认证，默认不开启
+  useOIDCCA:
+  clusterContext:
+  clusterCredentialsContext:
+controller:
+  replicas: 1
+  providerResImage: "tkestack/provider-res-amd64:v1.21.4-3"
+  image: "tkestack/tke-platform-controller-amd64:v1.9.0"
+  registryDomain: docker.io
+  registryNamespace: tkestack
+  # 监控存储类型
+  monitorStorageType: influxdb
+  # 监控存储地址，为tke集群master ip地址加8086端口
+  monitorStorageAddresses: http://172.19.0.2:8086
+certificate:
+  mountPath: /etc/kubernetes/pki/mount-test
+  dnsNames:
+  uris: 
+  ipAddresses:
+kubectl:
+  image:
+    repository: tkestack/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent

@@ -1,0 +1,35 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tke-platform-server-cert
+  namespace: tke
+spec:
+  secretName: tke-platform-server-secret
+  duration: 87600h
+  renewBefore: 87590h
+  subject:
+    organizations:
+    - Tencent
+  commonName: TKE-SERVER
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  dnsNames:
+    - tke-platform-api
+    - platform-api
+    - tke-platform-api.tke.svc
+  {{- with .Values.certificate.dnsNames }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  uris: 
+  {{- with .Values.certificate.uris }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  ipAddresses: 
+    - 127.0.0.1
+  {{- with .Values.certificate.ipAddresses }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+  issuerRef:
+    name: ca-issuer

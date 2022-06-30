@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tke-auth-post-check
+  namespace: tke
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  labels:
+    app: tke-auth-post-check
+spec:
+  template:
+    metadata:
+      labels:
+        app: tke-auth-post-check
+    spec:
+      serviceAccountName: tke-hook-user
+      containers:
+        - name: kubectl
+          image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
+          command: ['/bin/sh']
+          args:
+            - "-c"
+            - |
+              /bin/bash <<'EOF'
+              #!/bin/bash
+              components_lists=("tke-auth-api" "tke-auth-controller")
+              for component in ${components_lists[@]}
+              do
+                check=true
+                while [ $check = true ]
+                do
+                  componentStatus=$(kubectl get pod -A | grep $component | awk '{print $4}')
+                  if [ ${#componentStatus[*]} = 0 ]; then
+                    echo "$component dont exist"
+                    sleep 1
+                  else
+                    existPodNum=0
+                    runningPodNum=0
+                    for tmpComponentStatus in ${componentStatus[@]}
+                    do
+                      existPodNum=$(($existPodNum+1))
+                      if [ "$tmpComponentStatus"x = "Running"x ]; then
+                        runningPodNum=$(($runningPodNum+1))
+                      fi
+                    done
+                    if [ "$existPodNum" -eq "$runningPodNum" ]; then
+                      echo "$component status is Running"
+                      check=false
+                    else
+                      echo "$component status is not Running"
+                      sleep 1
+                    fi
+                  fi
+                done
+              done
+              EOF
+      restartPolicy: OnFailure
