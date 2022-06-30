@@ -1,0 +1,42 @@
+image:
+  repository: tkestack/tke-gateway-amd64
+  tag: v1.9.0
+  imagePullPolicy: IfNotPresent
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+registryDomainSuffix: docker.io
+# tke集群的租户id，默认default
+tenantID: default
+# OIDC认证方式的secret，默认自动生成
+# oIDCClientSecret: 25EOZex3zmIj5glxvYfDBp79YIM
+# 是否开启自签名，默认为true
+selfSigned: true
+# 第三方cert证书，在selfSigned为false时需要填值
+serverCrt:
+# 第三方certKey，在selfSigned为false时需要填值
+serverKey:
+enableRegistry:
+enableAuth: true
+enableBusiness:
+enableMonitor:
+enableRegistry:
+enableLogagent:
+enableAudit:
+enableApplication:
+enableMesh:
+certificate:
+  mountPath: /etc/kubernetes/pki
+  dnsNames:
+  uris: 
+  ipAddresses:
+kubectl:
+  image:
+    repository: tkestack/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent
+enableIngressRule:

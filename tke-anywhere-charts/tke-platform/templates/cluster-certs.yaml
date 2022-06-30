@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tke-platform-cluster-certs
+  namespace: tke
+data:
+  token.csv: {{ randAlphaNum 27 | nospace | b64enc }}{{ print ",admin,1,administrator" | nospace | b64enc }}

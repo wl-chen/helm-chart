@@ -1,0 +1,167 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: tke-auth-controller
+  name: tke-auth-controller
+  namespace: tke
+spec:
+  replicas: {{ .Values.controller.replicas }}
+  selector:
+    matchLabels:
+      app: tke-auth-controller
+  template:
+    metadata:
+      labels:
+        app: tke-auth-controller
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      containers:
+        - name: tke-auth-controller
+          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
+          command:
+            - /bin/sh
+            - -c 
+            - >
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd-ca.crt;
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd.crt;
+              ln -s /app/certs/cluster/etcd/ca.key /app/certs/etcd.key;
+              ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
+              ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
+              ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
+              ln -s /app/certs/cert-manager/admin.crt /app/certs/admin.crt;
+              ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
+              ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
+              ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
+              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
+              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
+              /app/bin/tke-auth-controller -C=/app/conf/tke-auth-controller.toml;
+          volumeMounts:
+            - name: cert-manager-certs
+              mountPath: /app/certs/cert-manager
+            - name: cluster-certs
+              mountPath: /app/certs/cluster
+            - name: certs
+              mountPath: /app/certs
+            - name: tke-auth-controller-volume
+              mountPath: /app/conf
+          ports:
+            - containerPort: 9458
+          livenessProbe:
+            httpGet:
+              port: 9458
+              path: /healthz
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: {{ .Values.controller.resources.limits.cpu }}
+              memory: {{ .Values.controller.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.controller.resources.requests.cpu }}
+              memory: {{ .Values.controller.resources.requests.memory }}
+      volumes:
+        - name: tke-auth-controller-volume
+          configMap:
+            name: tke-auth-controller
+        - name: certs
+          emptyDir: {}
+        - name: cluster-certs
+          hostPath:
+            path: {{ .Values.certificate.mountPath }}
+            type: Directory
+        - name: cert-manager-certs
+          projected:
+            sources:
+            - secret:
+                name: tke-ca
+                items:
+                - key: tls.crt
+                  path: ca.crt
+                - key: tls.key
+                  path: ca.key
+                optional: false
+            - secret:
+                name: tke-auth-server-secret
+                items:
+                - key: tls.crt
+                  path: server.crt
+                - key: tls.key
+                  path: server.key
+                optional: false
+            - secret:
+                name: tke-ca-admin
+                items:
+                - key: tls.crt
+                  path: admin.crt
+                - key: tls.key
+                  path: admin.key
+                optional: false
+            - secret:
+                name: tke-ca-webhook
+                items:
+                - key: tls.crt
+                  path: webhook.crt
+                - key: tls.key
+                  path: webhook.key
+                optional: false
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-auth-controller
+  namespace: tke
+data:
+  tke-auth-controller.toml: |
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [client]
+
+      [client.auth]
+      api_server = "https://tke-auth-api"
+      api_server_client_config = "/app/conf/tke-auth-config.yaml"
+
+    [features]
+      category_path = "/app/auth/category.json"
+      policy_path = "/app/auth/policy.json"
+      tenant_admin = "{{ .Values.controller.adminUsername }}"
+      tenant_admin_secret = "{{ .Values.controller.adminPassword }}"
+
+  tke-auth-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-auth-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
