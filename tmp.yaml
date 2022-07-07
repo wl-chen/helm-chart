@@ -1,0 +1,9 @@
+api:
+  redirectHosts:
+    - 172.31.16.29
+    - 129.226.33.190
+    - 129.226.33.190:31180
+    - 129.226.33.190:31443
+    - tke-gateway
+etcd:
+  hosts: https://etcd.kube-system:2379

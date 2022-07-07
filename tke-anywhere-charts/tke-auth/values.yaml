@@ -2,7 +2,17 @@ api:
   # tke-auth-api组件在node上的对外暴露端口，默认31138
   nodePort: 31138
   replicas: 1
-  image: tkestack/tke-auth-api-amd64:v1.9.0
+  image:
+    repository: tkestack/tke-auth-api-amd64
+    tag: v1.9.0
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
   enableAudit: 
   # auth的重定向访问地址，包括集群服务器ip地址（必填）、tke-gateway的域名（可选）、集群高可用的VIP地址（可选）和集群的公共可访问域名（可选）
   redirectHosts:
@@ -15,7 +25,17 @@ api:
   adminUsername: admin
 controller:
   replicas: 1
-  image: tkestack/tke-auth-controller-amd64:v1.9.0
+  image:
+    repository: tkestack/tke-auth-controller-amd64
+    tag: v1.9.0
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
   # tke集群的用户名，默认为admin
   adminUsername: admin
   # tke集群的密码，默认自动生成
@@ -23,7 +43,7 @@ controller:
 etcd:
   host: https://172.19.0.2:2379
 certificate:
-  mountPath: /etc/kubernetes/pki/mount-test
+  mountPath: /etc/kubernetes/pki
   dnsNames:
   uris: 
   ipAddresses:

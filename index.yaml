@@ -8,7 +8,7 @@ entries:
         url: https://cert-manager.io/public-keys/cert-manager-keyring-2021-09-20-1020CF3C033D4F35BAE1C19E1226061C665DF13E.gpg
     apiVersion: v1
     appVersion: v1.8.0
-    created: "2022-07-05T14:25:16.117004435+08:00"
+    created: "2022-07-08T18:02:34.622883315+08:00"
     description: A Helm chart for cert-manager
     digest: 33e57b441c35fa9bc86b6080263154fe8409306d6ca270ea353225637f52035c
     home: https://github.com/cert-manager/cert-manager
@@ -27,12 +27,35 @@ entries:
     urls:
     - https://wl-chen.github.io/helm-chart/cert-manager-v1.8.0.tgz
     version: v1.8.0
+  - annotations:
+      artifacthub.io/prerelease: "false"
+    apiVersion: v1
+    appVersion: v1.5.5
+    created: "2022-07-08T18:02:34.620114198+08:00"
+    description: A Helm chart for cert-manager
+    digest: bda6f5088ce533a58b23ed87a06d4f8dfabec4ad5e30d2ffdfcdc1a2983ae657
+    home: https://github.com/jetstack/cert-manager
+    icon: https://raw.githubusercontent.com/jetstack/cert-manager/master/logo/logo.png
+    keywords:
+    - cert-manager
+    - kube-lego
+    - letsencrypt
+    - tls
+    maintainers:
+    - email: cert-manager-maintainers@googlegroups.com
+      name: cert-manager-maintainers
+    name: cert-manager
+    sources:
+    - https://github.com/jetstack/cert-manager
+    urls:
+    - https://wl-chen.github.io/helm-chart/cert-manager-v1.5.5.tgz
+    version: v1.5.5
   cilium:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-05T14:25:16.117407667+08:00"
+    created: "2022-07-08T18:02:34.623795387+08:00"
     description: A Helm chart for Kubernetes
-    digest: c9a86758dcd57487a7061eba2d5581f0aabbf53f2790a561eda071bfc5fd3752
+    digest: b8736c798c2bb32a73a2cd3a6d52d3a498a9a52755699ece1e332dc249b3ba26
     name: cilium
     type: application
     urls:
@@ -52,10 +75,10 @@ entries:
       artifacthub.io/prerelease: "false"
     apiVersion: v2
     appVersion: 1.2.1
-    created: "2022-07-05T14:25:16.120274677+08:00"
+    created: "2022-07-08T18:02:34.626729542+08:00"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy
       and load balancer
-    digest: 9d657abaa12b25a8359404444125b57fd002754c9d245cedff4905dcea79b2f6
+    digest: c9a297b0bc9d4a2b7e0bc263d09d74d2e8067dbf0d0a64b5f20d543cef11e68b
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
     keywords:
@@ -76,9 +99,9 @@ entries:
   keepalived:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-05T14:25:16.12042622+08:00"
+    created: "2022-07-08T18:02:34.62687816+08:00"
     description: A Helm chart for Kubernetes
-    digest: 1834c431e49ad1bfbc77355add6a05a65dfc8c306dc6699402caa71e529b4a94
+    digest: 6d7703ce862cf731c36628f37c1819bbff07783b65e8e7ca85f0d03004fac3d0
     name: keepalived
     type: application
     urls:
@@ -87,9 +110,9 @@ entries:
   tke-auth:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-05T14:25:16.12081763+08:00"
+    created: "2022-07-08T18:02:34.627313021+08:00"
     description: A Helm chart for Kubernetes
-    digest: d9ae5923fa61d9a0d6a7d97c52bdac09fe253f08d6534433bf2d77ec843190ab
+    digest: 82cd3f1d6c0a2de99ec87611aa28b6beafc62c382bec083fcaafa15dda7286fc
     name: tke-auth
     type: application
     urls:
@@ -98,9 +121,9 @@ entries:
   tke-gateway:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-05T14:25:16.121186498+08:00"
+    created: "2022-07-08T18:02:34.62767757+08:00"
     description: A Helm chart for Kubernetes
-    digest: 2cbf3062082d134f25a21fe63b9539c07dac49fc88c296bd13e5943286f26c66
+    digest: 52f45d0540412231af7c7bf1b9f55abaa81db758aac0e75faa308dd74540fd54
     name: tke-gateway
     type: application
     urls:
@@ -109,12 +132,12 @@ entries:
   tke-platform:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-07-05T14:25:16.121816204+08:00"
+    created: "2022-07-08T18:02:34.628287209+08:00"
     description: A Helm chart for Kubernetes
-    digest: 2aab1bb02ef35ab9bc9e993cf24ab181df711877539610d8ea66ce1ba0e26d1e
+    digest: 014f61471a0538f74484a681c928044793c903028b075986d650f56ebf723e02
     name: tke-platform
     type: application
     urls:
     - https://wl-chen.github.io/helm-chart/tke-platform-0.1.0.tgz
     version: 0.1.0
-generated: "2022-07-05T14:25:16.113562381+08:00"
+generated: "2022-07-08T18:02:34.613622173+08:00"

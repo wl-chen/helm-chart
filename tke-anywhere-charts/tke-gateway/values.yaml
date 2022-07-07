@@ -1,6 +1,14 @@
-etcd:
-  host: https://172.19.0.2:2379
-image: tkestack/tke-gateway-amd64:v1.9.0
+image:
+  repository: tkestack/tke-gateway-amd64
+  tag: v1.9.0
+  imagePullPolicy: IfNotPresent
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
 registryDomainSuffix: docker.io
 # tke集群的租户id，默认default
 tenantID: default
@@ -22,7 +30,7 @@ enableAudit:
 enableApplication:
 enableMesh:
 certificate:
-  mountPath: /etc/kubernetes/pki/mount-test
+  mountPath: /etc/kubernetes/pki
   dnsNames:
   uris: 
   ipAddresses:
@@ -31,3 +39,4 @@ kubectl:
     repository: tkestack/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent
+enableIngressRule:

@@ -26,6 +26,10 @@ spec:
             - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
       initContainers:
         - command:
             - sh
@@ -38,14 +42,15 @@ spec:
               name: provider-volume
       containers:
         - name: tke-platform-controller
-          image: {{ .Values.controller.image }}
+          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
             - /bin/sh
             - -c 
             - >
-              ln -s /app/certs/cluster/etcd-ca.crt /app/certs/etcd-ca.crt;
-              ln -s /app/certs/cluster/etcd.crt /app/certs/etcd.crt;
-              ln -s /app/certs/cluster/etcd.key /app/certs/etcd.key;
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd-ca.crt;
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd.crt;
+              ln -s /app/certs/cluster/etcd/ca.key /app/certs/etcd.key;
               ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
               ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
               ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
@@ -92,11 +97,11 @@ spec:
             periodSeconds: 20
           resources:
             limits:
-              cpu: 100m
-              memory: 1Gi
+              cpu: {{ .Values.controller.resources.limits.cpu }}
+              memory: {{ .Values.controller.resources.limits.memory }}
             requests:
-              cpu: 50m
-              memory: 128Mi
+              cpu: {{ .Values.controller.resources.requests.cpu }}
+              memory: {{ .Values.controller.resources.requests.memory }}
       volumes:
         - name: certs
           emptyDir: {}

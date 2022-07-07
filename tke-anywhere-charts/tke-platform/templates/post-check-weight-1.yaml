@@ -16,45 +16,44 @@ spec:
         app: tke-platform-post-check
     spec:
       serviceAccountName: tke-hook-user
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
       containers:
         - name: kubectl
           image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
-          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
           command: ['/bin/sh']
           args:
             - "-c"
             - |
               /bin/bash <<'EOF'
               #!/bin/bash
-              components_lists=("tke-platform-api" "tke-platform-controller")
-              for component in ${components_lists[@]}
+              check=true
+              while [ $check = true ]
               do
-                check=true
-                while [ $check = true ]
-                do
-                  componentStatus=$(kubectl get pod -A | grep $component | awk '{print $4}')
-                  if [ ${#componentStatus[*]} = 0 ]; then
-                    echo "$component dont exist"
-                    sleep 1
-                  else
-                    existPodNum=0
-                    runningPodNum=0
-                    for tmpComponentStatus in ${componentStatus[@]}
-                    do
-                      existPodNum=$(($existPodNum+1))
-                      if [ "$tmpComponentStatus"x = "Running"x ]; then
-                        runningPodNum=$(($runningPodNum+1))
-                      fi
-                    done
-                    if [ "$existPodNum" -eq "$runningPodNum" ]; then
-                      echo "$component status is Running"
-                      check=false
-                    else
-                      echo "$component status is not Running"
-                      sleep 1
-                    fi
-                  fi
-                done
+                check=false
+                # if [ $check = false ] && [ $(kubectl get cluster -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
+                #   check=true
+                #   sleep 1
+                # fi
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-api -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi 
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-api -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-platform-api -n tke -o jsonpath="{.status.readyReplicas}") ]; then
+                  check=true
+                  sleep 1
+                fi
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-controller -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi 
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-controller -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-platform-controller -n tke -o jsonpath="{.status.readyReplicas}") ]; then
+                  check=true
+                  sleep 1
+                fi
               done
               EOF
       restartPolicy: OnFailure

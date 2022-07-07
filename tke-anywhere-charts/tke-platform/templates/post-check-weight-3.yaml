@@ -17,10 +17,14 @@ spec:
         app: tke-platform-post-check
     spec:
       serviceAccountName: tke-hook-user
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
       containers:
         - name: kubectl
           image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
-          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
           command: ['/bin/sh']
           args:
             - "-c"

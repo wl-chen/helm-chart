@@ -1,0 +1,5 @@
+#!/bin/bash
+
+helm lint tke-anywhere-charts/*
+helm package tke-anywhere-charts/*
+helm repo index --url https://wl-chen.github.io/helm-chart/ .

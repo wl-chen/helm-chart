@@ -6,7 +6,17 @@ metricsServerImage: tkestack/metrics-server:v0.3.6
 addonResizerImage: tkestack/addon-resizer:1.8.11
 api:
   replicas: 1
-  image: "tkestack/tke-platform-api-amd64:v1.9.0"
+  image:
+    repository: tkestack/tke-platform-api-amd64
+    tag: v1.9.0
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 150m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
   enableAuth: true
   enableAudit: 
   # OIDC认证方式客户端id，默认为default
@@ -20,7 +30,17 @@ api:
 controller:
   replicas: 1
   providerResImage: "tkestack/provider-res-amd64:v1.21.4-3"
-  image: "tkestack/tke-platform-controller-amd64:v1.9.0"
+  image:
+    repository: tkestack/tke-platform-controller-amd64
+    tag: v1.9.0
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 128Mi
   registryDomain: docker.io
   registryNamespace: tkestack
   # 监控存储类型
@@ -28,7 +48,7 @@ controller:
   # 监控存储地址，为tke集群master ip地址加8086端口
   monitorStorageAddresses: http://172.19.0.2:8086
 certificate:
-  mountPath: /etc/kubernetes/pki/mount-test
+  mountPath: /etc/kubernetes/pki
   dnsNames:
   uris: 
   ipAddresses:

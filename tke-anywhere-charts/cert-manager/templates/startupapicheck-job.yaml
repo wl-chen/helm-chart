@@ -1,4 +1,4 @@
-{{- if .Values.startupapicheck.enabled }}
+{{- if .Values.startupapicheck.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -10,9 +10,9 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/component: "startupapicheck"
     {{- include "labels" . | nindent 4 }}
-  {{- with .Values.startupapicheck.jobAnnotations }}
+  {{- if .Values.startupapicheck.jobAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+{{ toYaml .Values.startupapicheck.jobAnnotations | indent 4 }}
   {{- end }}
 spec:
   backoffLimit: {{ .Values.startupapicheck.backoffLimit }}
@@ -24,54 +24,52 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
         app.kubernetes.io/component: "startupapicheck"
         {{- include "labels" . | nindent 8 }}
-        {{- with .Values.startupapicheck.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with .Values.startupapicheck.podAnnotations }}
+{{- if .Values.startupapicheck.podLabels }}
+{{ toYaml .Values.startupapicheck.podLabels | indent 8 }}
+{{- end }}
+      {{- if .Values.startupapicheck.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+{{ toYaml .Values.startupapicheck.podAnnotations | indent 8 }}
       {{- end }}
     spec:
       restartPolicy: OnFailure
       serviceAccountName: {{ template "startupapicheck.serviceAccountName" . }}
-      {{- with .Values.global.priorityClassName }}
-      priorityClassName: {{ . | quote }}
+      {{- if .Values.global.priorityClassName }}
+      priorityClassName: {{ .Values.global.priorityClassName | quote }}
       {{- end }}
-      {{- with .Values.startupapicheck.securityContext }}
+      {{- if .Values.startupapicheck.securityContext}}
       securityContext:
-        {{- toYaml . | nindent 8 }}
+{{ toYaml .Values.startupapicheck.securityContext | indent 8 }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.startupapicheck.image }}
-          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{ .digest }}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
+          image: "{{- if .registry -}}{{ .registry }}/{{- end -}}{{ .repository }}{{- if (.digest) -}} @{{.digest}}{{- else -}}:{{ default $.Chart.AppVersion .tag }} {{- end -}}"
           {{- end }}
           imagePullPolicy: {{ .Values.startupapicheck.image.pullPolicy }}
           args:
           - check
           - api
           - --wait={{ .Values.startupapicheck.timeout }}
-          {{- with .Values.startupapicheck.extraArgs }}
-          {{- toYaml . | nindent 10 }}
+          {{- if .Values.startupapicheck.extraArgs }}
+{{ toYaml .Values.startupapicheck.extraArgs | indent 10 }}
           {{- end }}
-          {{- with .Values.startupapicheck.containerSecurityContext }}
+          {{- if .Values.startupapicheck.containerSecurityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml .Values.startupapicheck.containerSecurityContext | nindent 12 }}
           {{- end }}
-          {{- with .Values.startupapicheck.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.startupapicheck.nodeSelector }}
+{{ toYaml .Values.startupapicheck.resources | indent 12 }}
+    {{- with .Values.startupapicheck.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.startupapicheck.affinity }}
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.startupapicheck.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.startupapicheck.tolerations }}
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.startupapicheck.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-{{- end }}
+{{ toYaml . | indent 8 }}
+    {{- end }}
+{{- end -}}

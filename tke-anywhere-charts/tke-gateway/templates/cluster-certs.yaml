@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: tke-gateway-cluster-certs
-  namespace: tke
-data:
-  oidc-client-secret: {{ randAlphaNum 27 | nospace | b64enc }}

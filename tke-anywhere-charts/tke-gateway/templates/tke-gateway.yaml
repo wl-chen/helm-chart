@@ -39,16 +39,21 @@ spec:
         app: tke-gateway
     spec:
       dnsPolicy: ClusterFirstWithHostNet
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
       containers:
         - name: tke-gateway
-          image: {{ .Values.image }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
           command:
             - /bin/sh
             - -c 
             - >
-              ln -s /app/certs/cluster/etcd-ca.crt /app/certs/etcd-ca.crt;
-              ln -s /app/certs/cluster/etcd.crt /app/certs/etcd.crt;
-              ln -s /app/certs/cluster/etcd.key /app/certs/etcd.key;
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd-ca.crt;
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd.crt;
+              ln -s /app/certs/cluster/etcd/ca.key /app/certs/etcd.key;
               ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
               ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
               ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
@@ -91,11 +96,11 @@ spec:
             periodSeconds: 20
           resources:
             limits:
-              cpu: 100m
-              memory: 256Mi
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
             requests:
-              cpu: 50m
-              memory: 128Mi
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
       volumes:
         - name: tke-gateway-volume
           configMap:
