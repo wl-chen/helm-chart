@@ -1,10 +1,75 @@
-ciliumImage: tkestack/cilium:v1.9.5
-ciliumOperatorImage: tkestack/cilium-operator-generic:v1.9.5
-ipamdImage: tkestack/tke-eni-ipamd:v3.3.3
-masqImage: tkestack/ip-masq-agent:v1.0.0
-ciliumRouterImage: tkestack/cilium-router:v0.1.0
+cilium:
+  image:
+    repository: tkestack/cilium
+    tag: v1.9.5
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+  initContainer:
+    image:
+      repository: tkestack/cilium
+      tag: v1.9.5
+      imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  operator:
+    image:
+      repository: tkestack/cilium-operator-generic
+      tag: v1.9.5
+      imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  router:
+    image:
+      repository: tkestack/cilium-router
+      tag: v0.1.0
+      imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+ipamd:
+  maxNodePodNum: 256
+  image:
+    repository: tkestack/tke-eni-ipamd
+    tag: v3.3.3
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+masq:
+  image:
+    repository: tkestack/ip-masq-agent
+    tag: v1.0.0
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+clusterCIDR: 192.168.0.0/16
 networkMode: overlay
-clusterCIDR: 
-# 实际没有用到
-# maskSize: 
-maxNodePodNum: 

@@ -1,21 +1,20 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: tke-platform-pre-check
+  name: tke-auth-post-upgrade-check
   namespace: tke
   annotations:
-    "helm.sh/hook": pre-install
+    "helm.sh/hook": post-upgrade
     "helm.sh/hook-weight": "3"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
   labels:
-    app: tke-platform-pre-check
+    app: tke-auth-post-upgrade-check
 spec:
   template:
     metadata:
       labels:
-        app: tke-platform-pre-check
+        app: tke-auth-post-upgrade-check
     spec:
-      serviceAccountName: tke-hook-user
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
@@ -23,7 +22,7 @@ spec:
       containers:
         - name: kubectl
           image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
-          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
           command: ['/bin/sh']
           args:
             - "-c"
@@ -34,15 +33,15 @@ spec:
               while [ $check = true ]
               do
                 check=false
-                # if [ $check = false ] && [ $(kubectl get client -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
-                #   check=true
-                #   sleep 1
-                # fi
+                if [ $check = false ] && [ $(kubectl get client -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi
                 if [ $check = false ] && [ $(kubectl get deployment tke-auth-api -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
                   check=true
                   sleep 1
                 fi 
-                if [ $check = false ] && [ $(kubectl get deployment tke-auth-api -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-auth-api -n tke -o jsonpath="{.status.readyReplicas}") ]; then
+                if [ $check = false ] && [ $(kubectl get deployment tke-auth-api -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-auth-api -n tke -o jsonpath="{.status.updatedReplicas}") ]; then
                   check=true
                   sleep 1
                 fi
@@ -50,7 +49,7 @@ spec:
                   check=true
                   sleep 1
                 fi 
-                if [ $check = false ] && [ $(kubectl get deployment tke-auth-controller -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-auth-controller -n tke -o jsonpath="{.status.readyReplicas}") ]; then
+                if [ $check = false ] && [ $(kubectl get deployment tke-auth-controller -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-auth-controller -n tke -o jsonpath="{.status.updatedReplicas}") ]; then
                   check=true
                   sleep 1
                 fi

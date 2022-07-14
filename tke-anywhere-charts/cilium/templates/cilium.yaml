@@ -477,8 +477,8 @@ spec:
                   key: custom-cni-conf
                   name: cilium-config
                   optional: true
-          image: {{ .Values.ciliumImage }}
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.cilium.image.repository }}:{{ .Values.cilium.image.tag }}"
+          imagePullPolicy: "{{ .Values.cilium.image.imagePullPolicy }}"
           lifecycle:
             postStart:
               exec:
@@ -497,12 +497,12 @@ spec:
                 - SYS_MODULE
             privileged: true
           resources:
-            requests:
-              cpu: 100m
-              memory: 512Mi
             limits:
-              cpu: 2000m
-              memory: 2Gi
+              cpu: {{ .Values.cilium.resources.limits.cpu }}
+              memory: {{ .Values.cilium.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.cilium.resources.requests.cpu }}
+              memory: {{ .Values.cilium.resources.requests.memory }}
           volumeMounts:
             - mountPath: /sys/fs/bpf
               name: bpf-maps
@@ -550,8 +550,8 @@ spec:
                   key: wait-bpf-mount
                   name: cilium-config
                   optional: true
-          image: {{ .Values.ciliumImage }}
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.cilium.initContainer.image.repository }}:{{ .Values.cilium.initContainer.image.tag }}"
+          imagePullPolicy: "{{ .Values.cilium.initContainer.image.imagePullPolicy }}"
           name: clean-cilium-state
           securityContext:
             capabilities:
@@ -565,12 +565,12 @@ spec:
             - mountPath: /var/run/cilium
               name: cilium-run
           resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: {{ .Values.cilium.initContainer.resources.limits.cpu }}
+              memory: {{ .Values.cilium.initContainer.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.cilium.initContainer.resources.requests.cpu }}
+              memory: {{ .Values.cilium.initContainer.resources.requests.memory }}
       restartPolicy: Always
       priorityClassName: system-node-critical
       serviceAccount: cilium
@@ -701,8 +701,8 @@ spec:
                   key: debug
                   name: cilium-config
                   optional: true
-          image: {{ .Values.ciliumOperatorImage }}
-          imagePullPolicy: IfNotPresent
+          image: "{{ .Values.cilium.operator.image.repository }}:{{ .Values.cilium.operator.image.tag }}"
+          imagePullPolicy: "{{ .Values.cilium.operator.image.imagePullPolicy }}"
           name: cilium-operator
           livenessProbe:
             httpGet:
@@ -714,12 +714,12 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 3
           resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
             limits:
-              cpu: 1000m
-              memory: 1Gi
+              cpu: {{ .Values.cilium.operator.resources.limits.cpu }}
+              memory: {{ .Values.cilium.operator.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.cilium.operator.resources.requests.cpu }}
+              memory: {{ .Values.cilium.operator.resources.requests.memory }}
           volumeMounts:
             - mountPath: /tmp/cilium/config-map
               name: cilium-config-path

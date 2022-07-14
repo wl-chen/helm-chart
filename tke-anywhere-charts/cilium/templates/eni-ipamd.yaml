@@ -151,7 +151,7 @@ spec:
             {{ if eq .Values.networkMode "overlay" }}
             - --enable-cilium-node-controller=false
             - --enable-cilium-overlay=true
-            - --desired-pod-number={{ .Values.maxNodePodNum }}
+            - --desired-pod-number={{ .Values.ipamd.maxNodePodNum }}
             {{ else }}
             - --enable-cilium-node-controller=true
             - --enable-cilium-overlay=false
@@ -168,7 +168,8 @@ spec:
                 configMapKeyRef:
                   key: TKE_ENI_IPAMD_VPC_ID
                   name: tke-eni-ipamd
-          image: {{ .Values.ipamdImage }}
+          image: "{{ .Values.ipamd.image.repository }}:{{ .Values.ipamd.image.tag }}"
+          imagePullPolicy: "{{ .Values.ipamd.image.imagePullPolicy }}"
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -198,12 +199,12 @@ spec:
             successThreshold: 1
             timeoutSeconds: 1
           resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: {{ .Values.ipamd.resources.limits.cpu }}
+              memory: {{ .Values.ipamd.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.ipamd.resources.requests.cpu }}
+              memory: {{ .Values.ipamd.resources.requests.memory }}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:

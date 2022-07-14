@@ -23,16 +23,16 @@ spec:
         name: ip-masq-agent
     spec:
       containers:
-        - image: {{ .Values.masqImage }}
-          imagePullPolicy: IfNotPresent
+        - image: "{{ .Values.masq.image.repository }}:{{ .Values.masq.image.tag }}"
+          imagePullPolicy: "{{ .Values.masq.image.imagePullPolicy }}"
           name: ip-masq-agent
           resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
             limits:
-              cpu: 500m
-              memory: 512Mi
+              cpu: {{ .Values.masq.resources.limits.cpu }}
+              memory: {{ .Values.masq.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.masq.resources.requests.cpu }}
+              memory: {{ .Values.masq.resources.requests.memory }}
           securityContext:
             privileged: true
           terminationMessagePath: /dev/termination-log

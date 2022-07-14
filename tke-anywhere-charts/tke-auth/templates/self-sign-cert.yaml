@@ -18,8 +18,8 @@ spec:
   secretName: tke-ca
   commonName: TKE
   isCA: true
-  duration: 876000h # 100y
-  renewBefore: 875900h
+  duration: {{ .Values.certificate.caCertDuration }}
+  renewBefore: {{ .Values.certificate.caCertRenewBefore }}
   subject:
     organizations:
     - Tencent
@@ -46,8 +46,8 @@ metadata:
   namespace: tke
 spec:
   secretName: tke-ca-admin
-  duration: 876000h
-  renewBefore: 875900h
+  duration: {{ .Values.certificate.adminCertDuration }}
+  renewBefore: {{ .Values.certificate.adminCertRenewBefore }}
   subject:
     organizations:
     - system:masters
@@ -67,8 +67,8 @@ metadata:
   namespace: tke
 spec:
   secretName: tke-ca-webhook
-  duration: 876000h
-  renewBefore: 875900h
+  duration: {{ .Values.certificate.webhookCertDuration }}
+  renewBefore: {{ .Values.certificate.webhookCertRenewBefore }}
   subject:
     organizations:
     - Tencent
@@ -86,8 +86,8 @@ metadata:
   namespace: tke
 spec:
   secretName: tke-auth-server-secret
-  duration: 876000h
-  renewBefore: 875900h
+  duration: {{ .Values.certificate.serverCertDuration }}
+  renewBefore: {{ .Values.certificate.serverCertRenewBefore }}
   subject:
     organizations:
     - Tencent

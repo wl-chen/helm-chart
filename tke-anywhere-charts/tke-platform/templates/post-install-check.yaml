@@ -1,0 +1,58 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tke-platform-post-install-check
+  namespace: tke
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  labels:
+    app: tke-platform-post-install-check
+spec:
+  template:
+    metadata:
+      labels:
+        app: tke-platform-post-install-check
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      containers:
+        - name: kubectl
+          image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+          command: ['/bin/sh']
+          args:
+            - "-c"
+            - |
+              /bin/bash <<'EOF'
+              #!/bin/bash
+              check=true
+              while [ $check = true ]
+              do
+                check=false
+                if [ $check = false ] && [ $(kubectl get cluster -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-api -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi 
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-api -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-platform-api -n tke -o jsonpath="{.status.readyReplicas}") ]; then
+                  check=true
+                  sleep 1
+                fi
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-controller -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi 
+                if [ $check = false ] && [ $(kubectl get deployment tke-platform-controller -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-platform-controller -n tke -o jsonpath="{.status.readyReplicas}") ]; then
+                  check=true
+                  sleep 1
+                fi
+              done
+              EOF
+      restartPolicy: OnFailure

@@ -1,0 +1,71 @@
+{{- if .Values.hookJob.webhookUpdate.enable -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-install-update-webhook
+  namespace: tke
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  labels:
+    app: post-install-update-webhook
+spec:
+  parallelism: {{ .Values.hookJob.webhookUpdate.parallelism }}
+  completions: {{ .Values.hookJob.webhookUpdate.completions }}
+  ttlSecondsAfterFinished: {{ .Values.hookJob.webhookUpdate.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        app: post-install-update-webhook
+    spec:
+      containers:
+      - name: kubectl
+        image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+        imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+        command: ['/bin/sh']
+        args:
+          - "-c"
+          - |
+            /bin/bash <<'EOF'
+            #!/bin/bash
+            
+            kubectl get secret tke-ca-webhook -n tke -o jsonpath="{.data.tls\.crt}" | base64 -d > /etc/kubernetes/pki/webhook.crt
+            kubectl get secret tke-ca-webhook -n tke -o jsonpath="{.data.tls\.key}" | base64 -d > /etc/kubernetes/pki/webhook.key
+            EOF
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 0
+        volumeMounts:
+        - name: kubernetes
+          mountPath: /etc/kubernetes/pki
+      volumes:
+      - name: kubernetes
+        hostPath:
+          path: /etc/kubernetes/pki
+          type: Directory
+      restartPolicy: OnFailure
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+            - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - kube-scheduler-job
+            topologyKey: "kubernetes.io/hostname"
+{{- end -}}

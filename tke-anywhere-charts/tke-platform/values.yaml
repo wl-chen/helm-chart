@@ -5,7 +5,7 @@ publicIP: 43.156.24.48
 metricsServerImage: tkestack/metrics-server:v0.3.6
 addonResizerImage: tkestack/addon-resizer:1.8.11
 api:
-  replicas: 1
+  replicas: 2
   image:
     repository: tkestack/tke-platform-api-amd64
     tag: v1.9.0
@@ -28,7 +28,7 @@ api:
   clusterContext:
   clusterCredentialsContext:
 controller:
-  replicas: 1
+  replicas: 2
   providerResImage: "tkestack/provider-res-amd64:v1.21.4-3"
   image:
     repository: tkestack/tke-platform-controller-amd64
@@ -48,6 +48,8 @@ controller:
   # 监控存储地址，为tke集群master ip地址加8086端口
   monitorStorageAddresses: http://172.19.0.2:8086
 certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
   dnsNames:
   uris: 

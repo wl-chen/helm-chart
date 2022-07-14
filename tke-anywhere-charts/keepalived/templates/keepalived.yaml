@@ -12,9 +12,10 @@ spec:
       labels:
         app: keepalived
     nodeSelector:
-        node-role.kubernetes.io/master: ""
+      node-role.kubernetes.io/master: ""
     containers:
-      - image: {{ .Values.image }}
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
         name: keepalived
         args:
           - --log-console

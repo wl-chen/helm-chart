@@ -1,7 +1,7 @@
 api:
   # tke-auth-api组件在node上的对外暴露端口，默认31138
   nodePort: 31138
-  replicas: 1
+  replicas: 2
   image:
     repository: tkestack/tke-auth-api-amd64
     tag: v1.9.0
@@ -24,7 +24,7 @@ api:
   # authentication用户名，默认为admin
   adminUsername: admin
 controller:
-  replicas: 1
+  replicas: 2
   image:
     repository: tkestack/tke-auth-controller-amd64
     tag: v1.9.0
@@ -39,10 +39,19 @@ controller:
   # tke集群的用户名，默认为admin
   adminUsername: admin
   # tke集群的密码，默认自动生成
-  adminPassword: abc123
+  adminPassword: admin
 etcd:
   host: https://172.19.0.2:2379
 certificate:
+   # 100y
+  caCertDuration: 876000h
+  caCertRenewBefore: 875900h
+  adminCertDuration: 876000h
+  adminCertRenewBefore: 875900h
+  webhookCertDuration: 876000h
+  webhookCertRenewBefore: 875900h
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
   dnsNames:
   uris: 
@@ -52,3 +61,10 @@ kubectl:
     repository: tkestack/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent
+hookJob:
+  webhookUpdate:
+    enable: false
+    parallelism: 1
+    completions: 1
+    ttlSecondsAfterFinishe: 5
+  

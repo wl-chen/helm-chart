@@ -30,6 +30,8 @@ enableAudit:
 enableApplication:
 enableMesh:
 certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
   dnsNames:
   uris: 
@@ -39,4 +41,4 @@ kubectl:
     repository: tkestack/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent
-enableIngressRule:
+enableIngressRule: false

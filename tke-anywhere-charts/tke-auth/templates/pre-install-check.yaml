@@ -1,21 +1,20 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: tke-gateway-post-check
+  name: tke-auth-pre-check
   namespace: tke
   annotations:
-    "helm.sh/hook": post-install
+    "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "3"
     "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
   labels:
-    app: tke-gateway-post-check
+    app: tke-auth-pre-check
 spec:
   template:
     metadata:
       labels:
-        app: tke-gateway-post-check
+        app: tke-auth-pre-check
     spec:
-      serviceAccountName: tke-hook-user
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
@@ -23,7 +22,7 @@ spec:
       containers:
         - name: kubectl
           image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
-          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
           command: ['/bin/sh']
           args:
             - "-c"
@@ -34,11 +33,15 @@ spec:
               while [ $check = true ]
               do
                 check=false
-                if [ $check = false ] && [ $(kubectl get daemonset tke-gateway -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+                if [ $check = false ] && [ $(kubectl get certificate -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
+                  check=true
+                  sleep 1
+                fi
+                if [ $check = false ] && [ $(kubectl get daemonset ingress-nginx-controller -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
                   check=true
                   sleep 1
                 fi 
-                if [ $check = false ] && [ $(kubectl get daemonset tke-gateway -n tke -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset tke-gateway -n tke -o jsonpath="{.status.numberReady}") ]; then
+                if [ $check = false ] && [ $(kubectl get daemonset ingress-nginx-controller -n tke -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset ingress-nginx-controller -n tke -o jsonpath="{.status.numberReady}") ]; then
                   check=true
                   sleep 1
                 fi

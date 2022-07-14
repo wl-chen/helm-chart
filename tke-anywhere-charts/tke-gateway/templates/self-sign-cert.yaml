@@ -5,8 +5,8 @@ metadata:
   namespace: tke
 spec:
   secretName: tke-gateway-server-secret
-  duration: 876000h
-  renewBefore: 875900h
+  duration: {{ .Values.certificate.serverCertDuration }}
+  renewBefore: {{ .Values.certificate.serverCertRenewBefore }}
   subject:
     organizations:
     - Tencent
