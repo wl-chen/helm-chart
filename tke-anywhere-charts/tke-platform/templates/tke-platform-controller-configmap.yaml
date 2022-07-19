@@ -1,0 +1,69 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-platform-controller
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  tke-platform-controller.toml: |
+
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [client]
+
+      [client.platform]
+      api_server = "https://tke-platform-api"
+      api_server_client_config = "/app/conf/tke-platform-config.yaml"
+
+      [client.application]
+      api_server = "https://tke-application-api"
+      api_server_client_config = "/app/conf/tke-application-config.yaml"
+
+    [registry]
+    container_domain = "{{ .Values.controller.registryDomain }}"
+    container_namespace = "{{ .Values.controller.registryNamespace }}"
+
+    [features]
+    monitor_storage_type = "{{ .Values.controller.monitorStorageType }}"
+    monitor_storage_addresses = "{{ .Values.controller.monitorStorageAddresses }}"
+
+  tke-platform-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-platform-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
+  tke-application-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-application-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke

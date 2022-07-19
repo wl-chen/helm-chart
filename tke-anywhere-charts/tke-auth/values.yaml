@@ -1,4 +1,23 @@
 api:
+  labels:
+    app: tke-auth-api
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-auth-api
+  podAnnotations:
+  podLabels:
+    app: tke-auth-api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
   # tke-auth-api组件在node上的对外暴露端口，默认31138
   nodePort: 31138
   replicas: 2
@@ -24,6 +43,25 @@ api:
   # authentication用户名，默认为admin
   adminUsername: admin
 controller:
+  labels:
+    app: tke-auth-controller
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-auth-controller
+  podAnnotations:
+  podLabels:
+    app: tke-auth-controller
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
   replicas: 2
   image:
     repository: tkestack/tke-auth-controller-amd64
@@ -41,7 +79,7 @@ controller:
   # tke集群的密码，默认自动生成
   adminPassword: admin
 etcd:
-  host: https://172.19.0.2:2379
+  host: https://etcd.kube-system:2379
 certificate:
    # 100y
   caCertDuration: 876000h

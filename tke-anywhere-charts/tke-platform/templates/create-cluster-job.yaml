@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: tke-platform-create-cluster
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "3"

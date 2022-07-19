@@ -1,4 +1,28 @@
 cilium:
+  labels:
+    k8s-app: cilium
+  annotations:
+  selector:
+    matchLabels:
+      k8s-app: cilium
+  podAnnotations:
+    # This annotation plus the CriticalAddonsOnly toleration makes
+    # cilium to be a critical pod in the cluster, which ensures cilium
+    # gets priority scheduling.
+    # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
+    scheduler.alpha.kubernetes.io/critical-pod: ""
+  podLabels:
+    k8s-app: cilium
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: k8s-app
+                operator: In
+                values:
+                  - cilium
+          topologyKey: kubernetes.io/hostname
   image:
     repository: tkestack/cilium
     tag: v1.9.5
@@ -23,6 +47,28 @@ cilium:
         cpu: 100m
         memory: 128Mi
   operator:
+    labels:
+      io.cilium/app: operator
+      name: cilium-operator
+    annotations:
+    selector:
+      matchLabels:
+        io.cilium/app: operator
+        name: cilium-operator
+    podAnnotations:
+    podLabels:
+      io.cilium/app: operator
+      name: cilium-operator
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: io.cilium/app
+                  operator: In
+                  values:
+                    - operator
+            topologyKey: kubernetes.io/hostname
     image:
       repository: tkestack/cilium-operator-generic
       tag: v1.9.5
@@ -35,6 +81,33 @@ cilium:
         cpu: 100m
         memory: 128Mi
   router:
+    labels:
+      app: cilium-router
+    annotations:
+    selector:
+      matchLabels:
+        app: cilium-router
+    podAnnotations:
+    podLabels:
+      app: cilium-router
+      infra.tce.io/product: tcs
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: kubernetes.io/os
+                  operator: In
+                  values:
+                    - linux
+                - key: node.infra.tce.io/lifecycle
+                  operator: NotIn
+                  values:
+                    - maintain
+                - key: testing.infra.tce.io/node-type
+                  operator: NotIn
+                  values:
+                    - hollow
     image:
       repository: tkestack/cilium-router
       tag: v0.1.0
@@ -47,6 +120,28 @@ cilium:
         cpu: 100m
         memory: 128Mi
 ipamd:
+  labels:
+    k8s-app: tke-eni-ipamd
+    qcloud-app: tke-eni-ipamd
+  annotations:
+  selector:
+    matchLabels:
+      k8s-app: tke-eni-ipamd
+      qcloud-app: tke-eni-ipamd
+  podAnnotations:
+  podLabels:
+    k8s-app: tke-eni-ipamd
+    qcloud-app: tke-eni-ipamd
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
   maxNodePodNum: 256
   image:
     repository: tkestack/tke-eni-ipamd
@@ -60,6 +155,15 @@ ipamd:
       cpu: 100m
       memory: 128Mi
 masq:
+  labels:
+  annotations:
+  selector:
+    matchLabels:
+      name: ip-masq-agent
+  podAnnotations:
+  podLabels:
+    name: ip-masq-agent
+  affinity:
   image:
     repository: tkestack/ip-masq-agent
     tag: v1.0.0

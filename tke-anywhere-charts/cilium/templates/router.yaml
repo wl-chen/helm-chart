@@ -31,48 +31,39 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cilium-router
-    namespace: kube-system
+    namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cilium-router
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: cilium-router
+{{ toYaml .Values.cilium.router.labels | indent 4 }}
   name: cilium-router
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.cilium.router.annotations }}
+  annotations:
+{{ toYaml .Values.cilium.router.annotations | indent 4 }}
+  {{- end }}
 spec:
   selector:
-    matchLabels:
-      app: cilium-router
+{{ toYaml .Values.cilium.router.selector | indent 4 }}
   template:
     metadata:
+      {{- if .Values.cilium.router.podAnnotations }}
+      annotations:
+{{ toYaml .Values.cilium.router.podAnnotations | indent 8 }}
+      {{- end }}
       labels:
-        app: cilium-router
-        infra.tce.io/product: tcs
+{{ toYaml .Values.cilium.router.podLabels | indent 8 }}
     spec:
       affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-              - matchExpressions:
-                  - key: kubernetes.io/os
-                    operator: In
-                    values:
-                      - linux
-                  - key: node.infra.tce.io/lifecycle
-                    operator: NotIn
-                    values:
-                      - maintain
-                  - key: testing.infra.tce.io/node-type
-                    operator: NotIn
-                    values:
-                      - hollow
+{{ toYaml .Values.cilium.router.affinity | indent 8 }}
       containers:
         - args:
             - -iface=$(HOST_IP)

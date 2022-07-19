@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: provider-config
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 data:
   audit-policy.yaml: |
     # Log all requests at the Metadata level.
@@ -112,29 +112,7 @@ data:
       - level: RequestResponse
         verbs: ["create", "update", "patch", "delete", "deletecollection"]
   config.yaml: |
-    platformAPIClientConfig: conf/tke-platform-config.yaml
-    applicationAPIClientConfig: conf/tke-application-config.yaml
-    registry:
-      prefix: {{ .Values.controller.registryDomain }}/{{ .Values.controller.registryNamespace }}
-      ip: {{ .Values.publicIP }}
-    audit:
-      address: ""
-    feature:
-      skipConditions: []
-    docker:
-      extraArgs: {}
-    kubelet:
-      extraArgs: {}
-    apiServer:
-      extraArgs: {}
-    controllerManager:
-      extraArgs: {}
-    scheduler:
-      extraArgs: {}
-    authzWebhook:
-      endpoint: https://{{ .Values.publicIP }}:31138/auth/authz
-    business:
-      enabled: true
+{{ .Values.provider.config | indent 4 }}
   sysctl.conf: |-
     kernel.sem = "250 32000 32 1024"
     net.core.netdev_max_backlog = 20000

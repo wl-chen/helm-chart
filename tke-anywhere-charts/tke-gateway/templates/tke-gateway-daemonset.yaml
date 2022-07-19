@@ -1,46 +1,39 @@
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: tke-gateway
-  namespace: tke
-  annotations:
-    tke.prometheus.io/scrape: "true"
-    prometheus.io/scheme: https
-    prometheus.io/port: "9441"
-spec:
-  selector:
-    app: tke-gateway
-  type: NodePort
-  ports:
-    - name: http
-      nodePort: 31180
-      port: 80
-      protocol: TCP
-      targetPort: 80
-    - name: https
-      nodePort: 31443
-      port: 443
-      protocol: TCP
-      targetPort: 443
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
+  {{- if .Values.labels }}
+  annotations:
+{{ toYaml .Values.labels | indent 4 }}
+  {{- end }}
   name: tke-gateway
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.annotations }}
+  annotations:
+{{ toYaml .Values.annotations | indent 4 }}
+  {{- end }}
 spec:
   selector:
-    matchLabels:
-      app: tke-gateway
+{{ toYaml .Values.selector | indent 4 }}
   template:
     metadata:
       labels:
-        app: tke-gateway
+      {{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+      {{- end }}
+      labels:
+{{ toYaml .Values.podLabels | indent 8 }}
     spec:
+      {{- if .Values.affinity }}
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: "NoSchedule"
       containers:
@@ -146,113 +139,3 @@ spec:
                 - key: tls.key
                   path: webhook.key
                 optional: false
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: tke-gateway
-  namespace: tke
-data:
-  tke-gateway.toml: |
-    gateway_config = "/app/conf/tke-gateway-config.yaml"
-
-    [authentication]
-
-      [authentication.oidc]
-      client_id = "default"
-      issuer_url = "https://tke-auth-api/oidc"
-      ca_file = "/app/certs/ca.crt"
-      username_prefix ="-"
-      username_claim = "name"
-      groups_claim = "groups"
-      tenantid_claim = "federated_claims"
-
-    [insecure_serving]
-    port = 80
-
-    [secure_serving]
-    port = 443
-    tls_cipher_suites = ["TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256", "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305", "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305", "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA", "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA", "TLS_RSA_WITH_AES_128_GCM_SHA256", "TLS_RSA_WITH_AES_256_GCM_SHA384", "TLS_RSA_WITH_AES_128_CBC_SHA", "TLS_RSA_WITH_AES_256_CBC_SHA"]
-{{- if .Values.selfSigned }}
-    tls_cert_file = "/app/certs/server.crt"
-    tls_private_key_file = "/app/certs/server.key"
-{{- else }}
-    tls_cert_file = "/app/conf/server.crt"
-    tls_private_key_file = "/app/conf/server.key"
-{{- end }}
-
-  tke-gateway-config.yaml: |
-    apiVersion: gateway.config.tkestack.io/v1
-    kind: GatewayConfiguration
-{{- if .Values.enableAuth }}
-    auth:
-      defaultTenant: {{ .Values.tenantID }}
-{{- end }}
-{{- if .Values.enableRegistry }}
-    registry:
-      defaultTenant: {{ .Values.tenantID }}
-      domainSuffix: {{ .Values.registryDomainSuffix }}
-{{- end }}
-    components:
-{{- if .Values.enableAuth }}
-      auth:
-        address: https://tke-auth-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-      platform:
-        address: https://tke-platform-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- if .Values.enableBusiness }}
-      business:
-        address: https://tke-business-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if .Values.enableMonitor }}
-      monitor:
-        address: https://tke-monitor-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-      notify:
-        address: https://tke-notify-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if .Values.enableRegistry }}
-      registry:
-        address: https://tke-registry-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if .Values.enableLogagent }}
-      logagent:
-        address: https://tke-logagent-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if .Values.enableAudit }}
-      audit:
-        address: https://tke-audit-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if .Values.enableApplication }}
-      application:
-        address: https://tke-application-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if .Values.enableMesh }}
-      mesh:
-        address: https://tke-mesh-api
-        passthrough:
-          caFile: /app/certs/ca.crt
-{{- end }}
-{{- if not .Values.selfSigned }}
-  server.crt: |
-{{ .Values.serverCrt | indent 4 }}
-  server.key: |
-{{ .Values.serverKey | indent 4 }}
-{{- end }}

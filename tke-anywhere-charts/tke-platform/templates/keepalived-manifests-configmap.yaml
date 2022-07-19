@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: keepalived-manifests
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 data:
   keepalived.conf: |
     global_defs {

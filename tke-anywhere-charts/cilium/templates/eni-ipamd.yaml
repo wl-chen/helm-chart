@@ -6,13 +6,13 @@ data:
 kind: ConfigMap
 metadata:
   name: tke-eni-ipamd
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: tke-eni-ipamd
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -106,42 +106,38 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: tke-eni-ipamd
-    namespace: kube-system
+    namespace: {{ .Release.Namespace | quote }}
 ---
 # ipamd deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    k8s-app: tke-eni-ipamd
-    qcloud-app: tke-eni-ipamd
+{{ toYaml .Values.ipamd.labels | indent 4 }}
   name: tke-eni-ipamd
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.ipamd.annotations }}
+  annotations:
+{{ toYaml .Values.ipamd.annotations | indent 4 }}
+  {{- end }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10
   selector:
-    matchLabels:
-      k8s-app: tke-eni-ipamd
-      qcloud-app: tke-eni-ipamd
+{{ toYaml .Values.ipamd.selector | indent 4 }}
   template:
     metadata:
+      {{- if .Values.ipamd.podAnnotations }}
+      annotations:
+{{ toYaml .Values.ipamd.podAnnotations | indent 8 }}
+      {{- end }}
       creationTimestamp: null
       labels:
-        k8s-app: tke-eni-ipamd
-        qcloud-app: tke-eni-ipamd
+{{ toYaml .Values.ipamd.podLabels | indent 8 }}
     spec:
       affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-            - matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: Exists
+{{ toYaml .Values.ipamd.affinity | indent 8 }}
       containers:
         - args:
             - --clusterid

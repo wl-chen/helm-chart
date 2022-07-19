@@ -3,7 +3,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: selfsigned
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 spec:
   selfSigned: {}
 ---
@@ -13,7 +13,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: tke-ca
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 spec:
   secretName: tke-ca
   commonName: TKE
@@ -32,7 +32,7 @@ apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: ca-issuer
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 spec:
   ca: 
     secretName: tke-ca
@@ -43,7 +43,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: tke-ca-admin
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 spec:
   secretName: tke-ca-admin
   duration: {{ .Values.certificate.adminCertDuration }}
@@ -64,7 +64,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: tke-ca-webhook
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 spec:
   secretName: tke-ca-webhook
   duration: {{ .Values.certificate.webhookCertDuration }}
@@ -83,7 +83,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: tke-auth-server-cert
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 spec:
   secretName: tke-auth-server-secret
   duration: {{ .Values.certificate.serverCertDuration }}

@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: post-install-update-webhook
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "5"

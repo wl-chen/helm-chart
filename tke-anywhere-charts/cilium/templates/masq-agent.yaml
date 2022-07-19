@@ -6,22 +6,37 @@ data:
 kind: ConfigMap
 metadata:
   name: ip-masq-agent-config
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
+  {{- if .Values.masq.labels }}
+  labels:
+{{ toYaml .Values.masq.labels | indent 4 }}
+  {{- end }}
   name: ip-masq-agent
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.masq.annotations }}
+  annotations:
+{{ toYaml .Values.masq.annotations | indent 4 }}
+  {{- end }}
 spec:
   selector:
-    matchLabels:
-      name: ip-masq-agent
+{{ toYaml .Values.masq.selector | indent 4 }}
   template:
     metadata:
+      {{- if .Values.masq.podAnnotations }}
+      annotations:
+{{ toYaml .Values.masq.podAnnotations | indent 8 }}
+      {{- end }}
       labels:
-        name: ip-masq-agent
+{{ toYaml .Values.masq.podLabels | indent 8 }}
     spec:
+      {{- if .Values.masq.affinity }}
+      affinity:
+{{ toYaml .Values.masq.affinity | indent 8 }}
+      {{- end }}
       containers:
         - image: "{{ .Values.masq.image.repository }}:{{ .Values.masq.image.tag }}"
           imagePullPolicy: "{{ .Values.masq.image.imagePullPolicy }}"

@@ -1,37 +1,48 @@
----
 kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: tke-auth-controller
-  name: tke-auth-controller
-  namespace: tke
+{{ toYaml .Values.controller.labels | indent 4 }}
+  name: tke-platform-controller
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.controller.annotations }}
+  annotations:
+{{ toYaml .Values.controller.annotations | indent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.controller.replicas }}
   selector:
-    matchLabels:
-      app: tke-auth-controller
+{{ toYaml .Values.controller.selector | indent 4 }}
   template:
     metadata:
+      {{- if .Values.controller.podAnnotations }}
+      annotations:
+{{ toYaml .Values.controller.podAnnotations | indent 8 }}
+      {{- end }}
       labels:
-        app: tke-auth-controller
+{{ toYaml .Values.controller.podLabels | indent 8 }}
     spec:
       affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-            - matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: Exists
+{{ toYaml .Values.controller.affinity | indent 8 }}
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: "NoSchedule"
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - cp -r /data/res /app/provider/baremetal/
+          image: {{ .Values.controller.providerResImage }}
+          name: provider-res
+          volumeMounts:
+            - mountPath: /app/provider/baremetal
+              name: provider-volume
       containers:
-        - name: tke-auth-controller
+        - name: tke-platform-controller
           image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
@@ -50,7 +61,7 @@ spec:
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
               ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
               ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
-              /app/bin/tke-auth-controller -C=/app/conf/tke-auth-controller.toml;
+              /app/bin/tke-platform-controller -C=/app/conf/tke-platform-controller.toml;
           volumeMounts:
             - name: cert-manager-certs
               mountPath: /app/certs/cert-manager
@@ -58,13 +69,29 @@ spec:
               mountPath: /app/certs/cluster
             - name: certs
               mountPath: /app/certs
-            - name: tke-auth-controller-volume
+            - name: tke-platform-controller-volume
               mountPath: /app/conf
+            - name: provider-volume
+              mountPath: /app/provider/baremetal
+            - name: provider-config-volume
+              mountPath: /app/provider/baremetal/conf/
+            - name: docker-volume
+              mountPath: /app/provider/baremetal/conf/docker/
+            - name: kubelet-volume
+              mountPath: /app/provider/baremetal/conf/kubelet/
+            - name: kubeadm-volume
+              mountPath: /app/provider/baremetal/conf/kubeadm/
+            - name: gpu-manifests-volume
+              mountPath: /app/provider/baremetal/manifests/gpu/
+            - name: keepalived-manifests-volume
+              mountPath: /app/provider/baremetal/manifests/keepalived/
+            - name: metrics-server-manifests-volume
+              mountPath: /app/provider/baremetal/manifests/metrics-server/
           ports:
-            - containerPort: 9458
+            - containerPort: 9445
           livenessProbe:
             httpGet:
-              port: 9458
+              port: 9445
               path: /healthz
               scheme: HTTPS
             initialDelaySeconds: 15
@@ -77,9 +104,6 @@ spec:
               cpu: {{ .Values.controller.resources.requests.cpu }}
               memory: {{ .Values.controller.resources.requests.memory }}
       volumes:
-        - name: tke-auth-controller-volume
-          configMap:
-            name: tke-auth-controller
         - name: certs
           emptyDir: {}
         - name: cluster-certs
@@ -98,7 +122,7 @@ spec:
                   path: ca.key
                 optional: false
             - secret:
-                name: tke-auth-server-secret
+                name: tke-platform-server-secret
                 items:
                 - key: tls.crt
                   path: server.crt
@@ -121,47 +145,29 @@ spec:
                 - key: tls.key
                   path: webhook.key
                 optional: false
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: tke-auth-controller
-  namespace: tke
-data:
-  tke-auth-controller.toml: |
-    [secure_serving]
-    tls_cert_file = "/app/certs/server.crt"
-    tls_private_key_file = "/app/certs/server.key"
-
-    [client]
-
-      [client.auth]
-      api_server = "https://tke-auth-api"
-      api_server_client_config = "/app/conf/tke-auth-config.yaml"
-
-    [features]
-      category_path = "/app/auth/category.json"
-      policy_path = "/app/auth/policy.json"
-      tenant_admin = "{{ .Values.controller.adminUsername }}"
-      tenant_admin_secret = "{{ .Values.controller.adminPassword }}"
-
-  tke-auth-config.yaml: |
-    apiVersion: v1
-    kind: Config
-    clusters:
-      - name: tke
-        cluster:
-          certificate-authority: /app/certs/ca.crt
-          server: https://tke-auth-api
-    users:
-      - name: admin-cert
-        user:
-          client-certificate: /app/certs/admin.crt
-          client-key: /app/certs/admin.key
-    current-context: tke
-    contexts:
-      - context:
-          cluster: tke
-          user: admin-cert
-        name: tke
-
+        - name: tke-platform-controller-volume
+          configMap:
+            name: tke-platform-controller
+        - name: provider-volume
+          emptyDir: {}
+        - name: provider-config-volume
+          configMap:
+            name: provider-config
+        - name: docker-volume
+          configMap:
+            name: docker
+        - name: kubelet-volume
+          configMap:
+            name: kubelet
+        - name: kubeadm-volume
+          configMap:
+            name: kubeadm
+        - name: gpu-manifests-volume
+          configMap:
+            name: gpu-manifests
+        - name: keepalived-manifests-volume
+          configMap:
+            name: keepalived-manifests
+        - name: metrics-server-manifests-volume
+          configMap:
+            name: metrics-server-manifests

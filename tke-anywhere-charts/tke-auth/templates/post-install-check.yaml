@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: tke-auth-post-install-check
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
   annotations:
     "helm.sh/hook": post-install
     "helm.sh/hook-weight": "3"
@@ -23,36 +23,15 @@ spec:
         - name: kubectl
           image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
           imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy}}"
-          command: ['/bin/sh']
+          command: ['/app/hook']
           args:
-            - "-c"
-            - |
-              /bin/bash <<'EOF'
-              #!/bin/bash
-              check=true
-              while [ $check = true ]
-              do
-                check=false
-                if [ $check = false ] && [ $(kubectl get client -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
-                  check=true
-                  sleep 1
-                fi
-                if [ $check = false ] && [ $(kubectl get deployment tke-auth-api -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
-                  check=true
-                  sleep 1
-                fi 
-                if [ $check = false ] && [ $(kubectl get deployment tke-auth-api -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-auth-api -n tke -o jsonpath="{.status.readyReplicas}") ]; then
-                  check=true
-                  sleep 1
-                fi
-                if [ $check = false ] && [ $(kubectl get deployment tke-auth-controller -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
-                  check=true
-                  sleep 1
-                fi 
-                if [ $check = false ] && [ $(kubectl get deployment tke-auth-controller -n tke -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment tke-auth-controller -n tke -o jsonpath="{.status.readyReplicas}") ]; then
-                  check=true
-                  sleep 1
-                fi
-              done
-              EOF
+            - auth-post-install-check
+          volumeMounts:
+            - name: chart-hook-check
+              mountPath: /app/hook
+      volumes:
+        - name: chart-hook-check
+          configMap:
+            name: chart-hook-check
+            defaultMode: 0774
       restartPolicy: OnFailure

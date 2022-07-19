@@ -4,21 +4,21 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cilium
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 ---
 # Source: cilium/templates/cilium-operator-serviceaccount.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: cilium-operator
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 ---
 # Source: cilium/templates/cilium-configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cilium-config
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
 data:
 
   # Identity allocation mode selects how identities are shared between cilium
@@ -351,7 +351,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cilium
-    namespace: kube-system
+    namespace: {{ .Release.Namespace | quote }}
 ---
 # Source: cilium/templates/cilium-operator-clusterrolebinding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -365,20 +365,23 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: cilium-operator
-    namespace: kube-system
+    namespace: {{ .Release.Namespace | quote }}
 ---
 # Source: cilium/templates/cilium-agent-daemonset.yaml
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    k8s-app: cilium
+{{ toYaml .Values.cilium.labels | indent 4 }}
   name: cilium
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.cilium.annotations }}
+  annotations:
+{{ toYaml .Values.cilium.annotations | indent 4 }}
+  {{- end }}
 spec:
   selector:
-    matchLabels:
-      k8s-app: cilium
+{{ toYaml .Values.cilium.selector | indent 4 }}
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2
@@ -386,24 +389,12 @@ spec:
   template:
     metadata:
       annotations:
-        # This annotation plus the CriticalAddonsOnly toleration makes
-        # cilium to be a critical pod in the cluster, which ensures cilium
-        # gets priority scheduling.
-        # https://kubernetes.io/docs/tasks/administer-cluster/guaranteed-scheduling-critical-addon-pods/
-        scheduler.alpha.kubernetes.io/critical-pod: ""
+{{ toYaml .Values.cilium.podAnnotations | indent 8 }}
       labels:
-        k8s-app: cilium
+{{ toYaml .Values.cilium.podLabels | indent 8 }}
     spec:
       affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: k8s-app
-                    operator: In
-                    values:
-                      - cilium
-              topologyKey: kubernetes.io/hostname
+{{ toYaml .Values.cilium.affinity | indent 8 }}
       containers:
         - args:
             - --config-dir=/tmp/cilium/config-map
@@ -641,19 +632,20 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    io.cilium/app: operator
-    name: cilium-operator
+{{ toYaml .Values.cilium.operator.labels | indent 4 }}
   name: cilium-operator
-  namespace: kube-system
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.cilium.operator.annotations }}
+  annotations:
+{{ toYaml .Values.cilium.operator.annotations | indent 4 }}
+  {{- end }}
 spec:
   # We support HA mode only for Kubernetes version > 1.14
   # See docs on ServerCapabilities.LeasesResourceLock in file pkg/k8s/version/version.go
   # for more details.
   replicas: 1
   selector:
-    matchLabels:
-      io.cilium/app: operator
-      name: cilium-operator
+{{ toYaml .Values.cilium.operator.selector | indent 4 }}
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -661,23 +653,17 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      {{- if .Values.cilium.operator.podAnnotations }}
       annotations:
+{{ toYaml .Values.cilium.operator.podAnnotations | indent 8 }}
+      {{- end }}
       labels:
-        io.cilium/app: operator
-        name: cilium-operator
+{{ toYaml .Values.cilium.operator.podLabels | indent 8 }}
     spec:
       # In HA mode, cilium-operator pods must not be scheduled on the same
       # node as they will clash with each other.
       affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: io.cilium/app
-                    operator: In
-                    values:
-                      - operator
-              topologyKey: kubernetes.io/hostname
+{{ toYaml .Values.cilium.operator.affinity | indent 8 }}
       containers:
         - args:
             - --config-dir=/tmp/cilium/config-map

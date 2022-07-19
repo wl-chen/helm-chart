@@ -1,65 +1,34 @@
----
-apiVersion: apiregistration.k8s.io/v1
-kind: APIService
-metadata:
-  name: v1.platform.tkestack.io
-  annotations:
-    cert-manager.io/inject-ca-from: tke/tke-ca
-spec:
-  group: platform.tkestack.io
-  groupPriorityMinimum: 1000
-  service:
-    name: tke-platform-api
-    namespace: tke
-    port: 443
-  version: v1
-  versionPriority: 5
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: tke-platform-api
-  namespace: tke
-  annotations:
-    tke.prometheus.io/scrape: "true"
-    prometheus.io/scheme: https
-spec:
-  selector:
-    app: tke-platform-api
-  ports:
-    - protocol: TCP
-      port: 443
-      targetPort: 9443
----
 kind: Deployment
 apiVersion: apps/v1
 metadata:
   labels:
-    app: tke-platform-api
+{{ toYaml .Values.api.labels | indent 4 }}
   name: tke-platform-api
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.api.annotations }}
+  annotations:
+{{ toYaml .Values.api.annotations | indent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.api.replicas }}
   selector:
-    matchLabels:
-      app: tke-platform-api
+{{ toYaml .Values.api.selector | indent 4 }}
   template:
     metadata:
+      {{- if .Values.api.podAnnotations }}
+      annotations:
+{{ toYaml .Values.api.podAnnotations | indent 8 }}
+      {{- end }}
       labels:
-        app: tke-platform-api
+{{ toYaml .Values.api.podLabels | indent 8 }}
     spec:
       affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-            - matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: Exists
+{{ toYaml .Values.api.affinity | indent 8 }}
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: "NoSchedule"
       containers:
@@ -215,150 +184,3 @@ spec:
         - name: metrics-server-manifests-volume
           configMap:
             name: metrics-server-manifests
----
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: tke-platform-api
-  namespace: tke
-data:
-  tke-platform-api.toml: |
-    [secure_serving]
-    tls_cert_file = "/app/certs/server.crt"
-    tls_private_key_file = "/app/certs/server.key"
-
-    [etcd]
-    servers = [
-      "{{ .Values.etcd.host }}"
-    ]
-    cafile = "/app/certs/etcd-ca.crt"
-    certfile = "/app/certs/etcd.crt"
-    keyfile = "/app/certs/etcd.key"
-
-    [generic]
-    external_hostname = "tke-platform-api"
-    external_port = 443
-
-    [authentication]
-    token_auth_file = "/app/certs/token.csv"
-    client_ca_file = "/app/certs/ca.crt"
-
-      [authentication.oidc]
-{{- if .Values.api.enableAuth }}
-      client_id = "default"
-      issuer_url = "https://tke-auth-api/oidc"
-      external_issuer_url = "https://tke-auth-api/oidc"
-      ca_file = "/app/certs/ca.crt"
-      username_prefix ="-"
-      username_claim = "name"
-      groups_claim = "groups"
-      tenantid_claim = "federated_claims"
-{{- else }}
-      client_id = {{ .Values.api.oIDCClientID }}
-      issuer_url = {{ .Values.api.oIDCIssuerURL }}
-  {{- if .Values.api.useOIDCCA }}
-      ca_file = "/app/certs/oidc-ca.crt"
-  {{- end}}
-{{- end }}
-
-{{- if .Values.api.enableAuth }}
-      [authentication.webhook]
-      config_file = "/app/conf/tke-authn-webhook.yaml"
-{{- end }}
-
-      [authentication.requestheader]
-      client_ca_file = "/app/certs/front-proxy-ca.crt"
-      username_headers = "X-Remote-User"
-      group_headers = "X-Remote-Group"
-      extra_headers_prefix = "X-Remote-Extra-"
-
-  tke-platform-config.yaml: |
-    apiVersion: v1
-    kind: Config
-    clusters:
-      - name: tke
-        cluster:
-          certificate-authority: /app/certs/ca.crt
-          server: https://tke-platform-api
-    users:
-      - name: admin-cert
-        user:
-          client-certificate: /app/certs/admin.crt
-          client-key: /app/certs/admin.key
-    current-context: tke
-    contexts:
-      - context:
-          cluster: tke
-          user: admin-cert
-        name: tke
-
-  tke-authn-webhook.yaml: |
-    apiVersion: v1
-    kind: Config
-    clusters:
-      - name: tke
-        cluster:
-          certificate-authority: /app/certs/ca.crt
-          server: https://tke-auth-api/auth/authn
-    users:
-      - name: admin-cert
-        user:
-          client-certificate: /app/certs/admin.crt
-          client-key: /app/certs/admin.key
-    current-context: tke
-    contexts:
-    - context:
-        cluster: tke
-        user: admin-cert
-      name: tke
-
-  tke-authz-webhook.yaml: |
-    apiVersion: v1
-    kind: Config
-    clusters:
-      - name: tke
-        cluster:
-          certificate-authority: /app/certs/ca.crt
-          server: https://tke-auth-api/auth/authz
-    users:
-      - name: admin-cert
-        user:
-          client-certificate: /app/certs/admin.crt
-          client-key: /app/certs/admin.key
-    current-context: tke
-    contexts:
-    - context:
-        cluster: tke
-        user: admin-cert
-      name: tke
-
-{{- if .Values.api.enableAudit }}
-  audit-policy.yaml: |
-    apiVersion: audit.k8s.io/v1
-    kind: Policy
-    omitStages:
-    - "RequestReceived"
-    - "ResponseStarted"
-    rules:
-    - level: None
-      resources:
-      - group: "platform.tkestack.io"
-        resources: ["configmaps", "*/status"]
-    - level: RequestResponse
-      verbs: ["create", "update", "patch", "delete", "deletecollection"]
-
-  audit-api-client-config.yaml: |
-    apiVersion: v1
-    kind: Config
-    clusters:
-      - name: tke
-        cluster:
-          insecure-skip-tls-verify: true
-          server: https://tke-audit-api/apis/audit.tkestack.io/v1/events/sink/control-plane
-    current-context: tke
-    contexts:
-      - context:
-          cluster: tke
-        name: tke
-
-{{- end }}

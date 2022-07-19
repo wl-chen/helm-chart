@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: metrics-server-manifests
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 data:
   metrics-server.yaml: |
     apiVersion: rbac.authorization.k8s.io/v1
@@ -171,7 +171,7 @@ data:
           serviceAccountName: metrics-server
           containers:
           - name: metrics-server
-            image: {{ .Values.metricsServerImage }}
+            image: {{ .MetricsServerImage }}
             command:
             - /metrics-server
             - --metric-resolution=30s
@@ -191,7 +191,7 @@ data:
               mountPath: /etc/kubernetes/pki/
               readOnly: true
           - name: metrics-server-nanny
-            image: {{ .Values.addonResizerImage }}
+            image: {{ .AddonResizerImage }}
             resources:
               limits:
                 cpu: 100m

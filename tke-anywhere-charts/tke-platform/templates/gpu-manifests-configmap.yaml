@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: gpu-manifests
-  namespace: tke
+  namespace: {{ .Release.Namespace | quote }}
 data:
   nvidia-device-plugin.yaml: |
     # https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta4/nvidia-device-plugin.yml
