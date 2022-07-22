@@ -23,7 +23,7 @@ spec:
         - name: kubectl
           image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
           imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
-          command: ['/app/hook']
+          command: ['/app/hook/chart-hook-check.sh']
           args:
             - gateway-pre-install-check
           volumeMounts:
