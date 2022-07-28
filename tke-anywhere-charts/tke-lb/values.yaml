@@ -1,0 +1,28 @@
+global:
+  enableKeepalived: true
+
+keepalived:
+  labels:
+  annotations:
+  selector:
+    matchLabels:
+      app: keepalived
+  podAnnotations:
+  podLabels:
+    app: keepalived
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+  image:
+    repository: tkestack/keepalived
+    tag: 2.0.16-r0
+    imagePullPolicy: IfNotPresent
+  vip: 127.0.0.1
+  interface: eth0
