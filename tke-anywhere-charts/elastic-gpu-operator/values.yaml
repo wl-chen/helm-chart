@@ -1,0 +1,282 @@
+# Default values for gpu-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+platform:
+  openshift: false
+
+nfd:
+  enabled: true
+
+psp:
+  enabled: false
+
+daemonsets:
+  priorityClassName: system-node-critical
+  tolerations:
+  - key: nvidia.com/gpu
+    operator: Exists
+    effect: NoSchedule
+
+global:
+  repository: "tkestack"
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+validator:
+  image: gpu-operator-validator
+  # If version is not specified, then default is to use chart.AppVersion
+  version: "v1.0.0"
+  imagePullPolicy: IfNotPresent
+  env: []
+  args: []
+  securityContext:
+    privileged: true
+    seLinuxOptions:
+      level: "s0"
+  resources: {}
+  plugin:
+    env:
+      - name: WITH_WORKLOAD
+        value: "true"
+
+operator:
+  image: elastic-gpu-operator
+  # If version is not specified, then default is to use chart.AppVersion
+  version: latest-ubi8-private
+  imagePullPolicy: IfNotPresent
+  priorityClassName: system-node-critical
+  defaultRuntime: docker
+  runtimeClass: nvidia
+  initContainer:
+    image: cuda
+    version: 11.4.2-base-ubi8
+    imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: "node-role.kubernetes.io/master"
+    operator: "Equal"
+    value: ""
+    effect: "NoSchedule"
+  annotations:
+    openshift.io/scc: restricted-readonly
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          preference:
+            matchExpressions:
+              - key: "node-role.kubernetes.io/master"
+                operator: In
+                values: [""]
+  logging:
+    timeEncoding: epoch
+  resources:
+    limits:
+      cpu: 500m
+      memory: 350Mi
+    requests:
+      cpu: 200m
+      memory: 100Mi
+
+mig:
+  strategy: single
+
+driver:
+  enabled: true
+  use_ocp_driver_toolkit: false
+  image: nvidia-driver
+  version: "v470"
+  imagePullPolicy: IfNotPresent
+  rdma:
+    enabled: false
+    useHostMofed: false
+  manager:
+    image: k8s-driver-manager
+    version: v0.2.0
+    imagePullPolicy: IfNotPresent
+    env:
+      - name: ENABLE_AUTO_DRAIN
+        value: "true"
+      - name: DRAIN_USE_FORCE
+        value: "false"
+      - name: DRAIN_POD_SELECTOR_LABEL
+        value: ""
+      - name: DRAIN_TIMEOUT_SECONDS
+        value: "0s"
+      - name: DRAIN_DELETE_EMPTYDIR_DATA
+        value: "false"
+  env: []
+  securityContext:
+    privileged: true
+    seLinuxOptions:
+      level: "s0"
+  resources: {}
+  # private mirror repository configuration
+  repoConfig:
+    configMapName: ""
+  # custom ssl key/certificate configuration
+  certConfig:
+    name: ""
+  # vGPU licensing configuration
+  licensingConfig:
+    configMapName: ""
+    nlsEnabled: false
+  # vGPU topology daemon configuration
+  virtualTopology:
+    config: ""
+
+toolkit:
+  enabled: true
+  image: container-toolkit
+  version: "1.7.2"
+  imagePullPolicy: IfNotPresent
+  env: []
+  securityContext:
+    privileged: true
+    seLinuxOptions:
+      level: "s0"
+  resources: {}
+
+devicePlugin:
+  enabled: false
+  nodeSelector: ""
+  image: k8s-device-plugin
+  version: v0.10.0-ubi8
+  imagePullPolicy: IfNotPresent
+  args: []
+  env:
+    - name: PASS_DEVICE_SPECS
+      value: "true"
+    - name: FAIL_ON_INIT_ERROR
+      value: "true"
+    - name: DEVICE_LIST_STRATEGY
+      value: envvar
+    - name: DEVICE_ID_STRATEGY
+      value: uuid
+    - name: NVIDIA_VISIBLE_DEVICES
+      value: all
+    - name: NVIDIA_DRIVER_CAPABILITIES
+      value: all
+  securityContext:
+    privileged: true
+  resources: {}
+
+# standalone dcgm hostengine
+dcgm:
+  # disabled by default to use embedded nv-hostengine by exporter
+  enabled: false
+  image: dcgm
+  version: 2.3.1-ubuntu20.04
+  imagePullPolicy: IfNotPresent
+  hostPort: 5555
+  args: []
+  env: []
+  securityContext: {}
+  resources: {}
+
+dcgmExporter:
+  image: dcgm-exporter
+  version: 2.3.1-2.6.1-ubuntu20.04
+  imagePullPolicy: IfNotPresent
+  env:
+    - name: DCGM_EXPORTER_LISTEN
+      value: ":9400"
+    - name: DCGM_EXPORTER_KUBERNETES
+      value: "true"
+    - name: DCGM_EXPORTER_COLLECTORS
+      value: "/etc/dcgm-exporter/dcp-metrics-included.csv"
+  securityContext: {}
+  resources: {}
+
+gfd:
+  image: gpu-feature-discovery
+  version: v0.4.1
+  imagePullPolicy: IfNotPresent
+  env:
+    - name: GFD_SLEEP_INTERVAL
+      value: 60s
+    - name: GFD_FAIL_ON_INIT_ERROR
+      value: "true"
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+
+
+migManager:
+  enabled: false
+  image: k8s-mig-manager
+  version: v0.2.0-ubuntu20.04
+  imagePullPolicy: IfNotPresent
+  env:
+    - name: WITH_REBOOT
+      value: "false"
+  securityContext:
+    privileged: true
+  resources: {}
+  config:
+    name: ""
+  gpuClientsConfig:
+    name: ""
+
+nodeStatusExporter:
+  enabled: false
+  image: gpu-operator-validator
+  version: v1.9.1
+  imagePullPolicy: IfNotPresent
+  resources: {}
+
+node-feature-discovery:
+  worker:
+    tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Equal"
+      value: ""
+      effect: "NoSchedule"
+    - key: "nvidia.com/gpu"
+      operator: "Equal"
+      value: "present"
+      effect: "NoSchedule"
+
+    config: |
+      sources:
+        pci:
+          deviceClassWhitelist:
+          - "02"
+          - "0200"
+          - "0207"
+          - "0300"
+          - "0302"
+          deviceLabelFields:
+          - vendor
+
+  master:
+    extraLabelNs:
+      - nvidia.com
+      - tke.cloud.tencent.com
+
+  serviceAccount:
+    name: node-feature-discovery
+
+qgpu:
+  enabled: true
+  scheduler:
+    image: qgpu-scheduler
+    version: v1.0.3
+    priority: binpack
+    svcClusterIp: ""
+  manager:
+    image: qgpu-manager
+    version: v1.0.4-private
+    modifyKernelReboot: "false"
+    kubeletRootDir: "/var/lib/kubelet"
+    labelEnabled: false
+  license_server:
+    image: qgpu-license-server
+    version: v1.0.0-private
+    license:
+
+exporter:
+  image: elastic-gpu-exporter
+  version: v1.0.5
+
+cgroupDriver: cgroupfs

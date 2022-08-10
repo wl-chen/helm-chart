@@ -96,7 +96,7 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: status.hostIP
-          image: "{{ .Values.cilium.router.image.repository }}:{{ .Values.cilium.router.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.cilium.router.image.repository }}:{{ .Values.cilium.router.image.tag }}"
           imagePullPolicy: "{{ .Values.cilium.router.image.imagePullPolicy }}"
           name: cilium-router
           resources:

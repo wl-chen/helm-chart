@@ -1,0 +1,123 @@
+---
+{{- if .Values.qgpu.enabled }}
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: qgpu-license-server
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - "*"
+{{- if .Values.psp.enabled }}
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+     - gpu-operator-privileged
+{{- end }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: qgpu-license-server
+  namespace: kube-system
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: qgpu-license-server
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: qgpu-license-server
+subjects:
+  - kind: ServiceAccount
+    name: qgpu-license-server
+    namespace: kube-system
+---
+{{- if .Values.qgpu.license_server.license }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tecentcloud-qgpu-license-data0001
+  namespace: kube-system
+  labels:
+    tencent-qgpu: tecentcloud-qgpu-license-data
+data:
+  qgpu-license.dat: {{ .Values.qgpu.license_server.license }}
+{{- end }}
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: qgpu-license-server
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qgpu-license-server
+  template:
+    metadata:
+      labels:
+        app: qgpu-license-server
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ''
+    spec:
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+          key: node-role.kubernetes.io/master
+      serviceAccount: qgpu-license-server
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: qgpu-license-server
+          image: {{ .Values.global.repository }}/{{ .Values.qgpu.license_server.image }}:{{ .Values.qgpu.license_server.version }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          command: ["license-server"]
+          livenessProbe:
+            httpGet:
+              {{- if .Values.qgpu.license_server.license }}
+              path: /ls
+              {{- else }}
+              path: /healthz
+              {{- end }}
+              port: 10080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 2
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "1"
+            requests:
+              memory: "200Mi"
+              cpu: "0.5"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qgpu-license-server
+  namespace: kube-system
+  labels:
+    app: qgpu-license-server
+spec:
+  ports:
+    - port: 10080
+      name: http
+      targetPort: 10080
+  selector:
+    app: qgpu-license-server
+{{- end }}

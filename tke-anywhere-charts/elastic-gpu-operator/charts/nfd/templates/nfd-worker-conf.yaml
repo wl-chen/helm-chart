@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.worker.configmapName }}
+  namespace: kube-system
+  labels:
+  {{- include "node-feature-discovery.labels" . | nindent 4 }}
+data:
+  nfd-worker.conf: |-
+    {{- .Values.worker.config | nindent 4 }}

@@ -1,0 +1,128 @@
+---
+{{- if .Values.qgpu.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: qgpu-scheduler
+  namespace: kube-system
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: qgpu-scheduler
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - update
+      - patch
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - bindings
+      - pods/binding
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+{{- if .Values.psp.enabled }}
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+     - gpu-operator-privileged
+{{- end }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: qgpu-scheduler
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: qgpu-scheduler
+subjects:
+  - kind: ServiceAccount
+    name: qgpu-scheduler
+    namespace: kube-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qgpu-scheduler
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qgpu-scheduler
+  template:
+    metadata:
+      labels:
+        app: qgpu-scheduler
+    spec:
+      serviceAccount: qgpu-scheduler
+      {{- if .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.global.imagePullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: qgpu-scheduler
+          image: {{ .Values.global.repository }}/{{ .Values.qgpu.scheduler.image }}:{{ .Values.qgpu.scheduler.version }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          command: ["qgpu-scheduler"]
+          args: ["-priority", {{ .Values.qgpu.scheduler.priority }}]
+          env:
+            - name: PORT
+              value: "12345"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qgpu-scheduler
+  namespace: kube-system
+  labels:
+    app: qgpu-scheduler
+spec:
+  {{- if .Values.qgpu.scheduler.svcClusterIp }}
+  clusterIP: {{ .Values.qgpu.scheduler.svcClusterIp }}
+  {{- end }}
+  ports:
+    - port: 12345
+      name: http
+      targetPort: 12345
+  selector:
+    app: qgpu-scheduler
+{{- end }}

@@ -36,14 +36,14 @@ spec:
             - sh
             - -c
             - cp -r /data/res /app/provider/baremetal/
-          image: {{ .Values.controller.providerResImage }}
+          image: {{ .Values.registry }}/{{ .Values.controller.providerResImage }}
           name: provider-res
           volumeMounts:
             - mountPath: /app/provider/baremetal
               name: provider-volume
       containers:
         - name: tke-platform-controller
-          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
             - /bin/sh

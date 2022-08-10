@@ -21,7 +21,7 @@ spec:
         effect: "NoSchedule"
       containers:
         - name: kubectl
-          image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
           imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
           command: ['/app/hook/chart-hook-check.sh']
           args:
@@ -32,6 +32,6 @@ spec:
       volumes:
         - name: chart-hook-check
           configMap:
-            name: chart-hook-check
+            name: tke-gateway-chart-hook-check
             defaultMode: 0774
       restartPolicy: OnFailure

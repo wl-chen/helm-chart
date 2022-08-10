@@ -1,3 +1,4 @@
+registry: ccr.ccs.tencentyun.com
 labels:
 annotations:
 selector:
@@ -8,7 +9,7 @@ podLabels:
   app: tke-gateway
 affinity:
 image:
-  repository: tkestack/tke-gateway-amd64
+  repository: tdccimages/tke-gateway-amd64
   tag: v1.9.0
   imagePullPolicy: IfNotPresent
 resources:
@@ -18,7 +19,7 @@ resources:
   requests:
     cpu: 50m
     memory: 128Mi
-registryDomainSuffix: docker.io
+registryDomainSuffix: registry.tke.com
 # tke集群的租户id，默认default
 tenantID: default
 # OIDC认证方式的secret，默认自动生成
@@ -29,15 +30,15 @@ selfSigned: true
 serverCrt:
 # 第三方certKey，在selfSigned为false时需要填值
 serverKey:
-enableRegistry:
 enableAuth: true
-enableBusiness:
-enableMonitor:
-enableRegistry:
-enableLogagent:
-enableAudit:
-enableApplication:
-enableMesh:
+enableBusiness: 
+enableMonitor: true
+enableNotify: true
+enableRegistry: true
+enableLogagent: true
+enableAudit: true
+enableApplication: true
+enableMesh: 
 certificate:
   serverCertDuration: 876000h
   serverCertRenewBefore: 875900h
@@ -47,7 +48,21 @@ certificate:
   ipAddresses:
 kubectl:
   image:
-    repository: tkestack/kubectl
+    repository: tdccimages/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent
-enableIngressRule: false
+ingress:
+  enabled: true
+  # add custom ingress rule, for example:
+  #   rules:
+  #   - host: "tke-gateway"
+  #     http:
+  #       paths:
+  #         - pathType: Prefix
+  #           path: "/"
+  #           backend:
+  #             service:
+  #               name: tke-gateway
+  #               port:
+  #                 number: 80
+  rules: []

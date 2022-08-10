@@ -23,7 +23,7 @@ spec:
         effect: "NoSchedule"
       containers:
         - name: kubectl
-          image: "{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
           imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
           command: ['/bin/sh']
           args:

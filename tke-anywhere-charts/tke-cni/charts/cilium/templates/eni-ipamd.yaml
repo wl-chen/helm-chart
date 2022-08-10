@@ -163,7 +163,7 @@ spec:
                 configMapKeyRef:
                   key: TKE_ENI_IPAMD_VPC_ID
                   name: tke-eni-ipamd
-          image: "{{ .Values.ipamd.image.repository }}:{{ .Values.ipamd.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.ipamd.image.repository }}:{{ .Values.ipamd.image.tag }}"
           imagePullPolicy: "{{ .Values.ipamd.image.imagePullPolicy }}"
           livenessProbe:
             failureThreshold: 3

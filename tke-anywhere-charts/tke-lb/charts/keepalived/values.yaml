@@ -1,3 +1,4 @@
+registry: ccr.ccs.tencentyun.com
 labels:
 annotations:
 selector:

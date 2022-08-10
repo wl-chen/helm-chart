@@ -1,3 +1,4 @@
+registry: ccr.ccs.tencentyun.com
 etcd:
   host: https://etcd.kube-system:2379
 provider:
@@ -47,7 +48,7 @@ api:
             operator: Exists
   replicas: 2
   image:
-    repository: tkestack/tke-platform-api-amd64
+    repository: tdccimages/tke-platform-api-amd64
     tag: v1.9.0
     imagePullPolicy: IfNotPresent
   resources:
@@ -58,15 +59,13 @@ api:
       cpu: 100m
       memory: 256Mi
   enableAuth: true
-  enableAudit: 
+  enableAudit: true
   # OIDC认证方式客户端id，默认为default
   oIDCClientID: default
   # OIDC认证方式的issuer_url，默认为https://tke-auth-api/oidc
   oIDCIssuerURL: https://tke-auth-api/oidc
   # 是否开启OIDC认证，默认不开启
   useOIDCCA:
-  clusterContext:
-  clusterCredentialsContext:
 controller:
   labels:
     app: tke-platform-controller
@@ -90,7 +89,7 @@ controller:
   replicas: 2
   providerResImage: "tkestack/provider-res-amd64:v1.21.4-3"
   image:
-    repository: tkestack/tke-platform-controller-amd64
+    repository: tdccimages/tke-platform-controller-amd64
     tag: v1.9.0
     imagePullPolicy: IfNotPresent
   resources:
@@ -100,12 +99,8 @@ controller:
     requests:
       cpu: 50m
       memory: 128Mi
-  registryDomain: docker.io
-  registryNamespace: tkestack
-  # 监控存储类型
-  monitorStorageType: influxdb
-  # 监控存储地址，为tke集群master ip地址加8086端口
-  monitorStorageAddresses: http://172.19.0.2:8086
+  registryDomain: ccr.ccs.tencentyun.com
+  registryNamespace: tdccimages
 certificate:
   serverCertDuration: 876000h
   serverCertRenewBefore: 875900h
@@ -115,6 +110,6 @@ certificate:
   ipAddresses:
 kubectl:
   image:
-    repository: tkestack/kubectl
+    repository: tdccimages/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent

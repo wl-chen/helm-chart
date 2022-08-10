@@ -1,7 +1,9 @@
 global:
   enableKeepalived: true
+  registry: &registry ccr.ccs.tencentyun.com
 
 keepalived:
+  registry: *registry
   labels:
   annotations:
   selector:
@@ -21,7 +23,7 @@ keepalived:
           - key: node-role.kubernetes.io/master
             operator: Exists
   image:
-    repository: tkestack/keepalived
+    repository: tdccimages/keepalived
     tag: 2.0.16-r0
     imagePullPolicy: IfNotPresent
   vip: 127.0.0.1

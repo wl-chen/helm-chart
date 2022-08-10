@@ -38,7 +38,7 @@ spec:
         effect: "NoSchedule"
       containers:
         - name: tke-gateway
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
           command:
             - /bin/sh

@@ -33,7 +33,7 @@ spec:
         effect: "NoSchedule"
       containers:
         - name: tke-auth-controller
-          image: "{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
             - /bin/sh

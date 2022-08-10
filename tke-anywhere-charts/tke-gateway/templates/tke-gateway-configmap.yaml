@@ -66,6 +66,8 @@ data:
         address: https://tke-monitor-api
         passthrough:
           caFile: /app/certs/ca.crt
+{{- end }}
+{{- if .Values.enableNotify }}
       notify:
         address: https://tke-notify-api
         passthrough:

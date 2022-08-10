@@ -38,7 +38,7 @@ spec:
 {{ toYaml .Values.masq.affinity | indent 8 }}
       {{- end }}
       containers:
-        - image: "{{ .Values.masq.image.repository }}:{{ .Values.masq.image.tag }}"
+        - image: "{{ .Values.registry }}/{{ .Values.masq.image.repository }}:{{ .Values.masq.image.tag }}"
           imagePullPolicy: "{{ .Values.masq.image.imagePullPolicy }}"
           name: ip-masq-agent
           resources:

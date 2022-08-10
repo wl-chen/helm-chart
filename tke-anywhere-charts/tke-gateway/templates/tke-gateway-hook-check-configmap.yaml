@@ -1,7 +1,7 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: chart-hook-check
+  name: tke-gateway-chart-hook-check
   namespace: {{ .Release.Namespace | quote }}
   annotations:
     "helm.sh/hook": pre-install
@@ -100,35 +100,6 @@ data:
     CHECK_TYPE=$1
     echo $CHECK_TYPE
     case $CHECK_TYPE in
-        auth-pre-install-check)
-            check_components_cr certificate
-            check_daemonset_install ingress-nginx-controller tke
-            ;;
-        auth-post-install-check)
-            check_components_cr client
-            check_deployment_install tke-auth-api tke
-            check_deployment_install tke-auth-controller tke
-            ;;
-        auth-post-upgrade-check)
-            check_components_cr client
-            check_deployment_upgrade tke-auth-api tke
-            check_deployment_upgrade tke-auth-controller tke
-            ;;
-        platform-pre-install-check)
-            check_components_cr client
-            check_deployment_install tke-auth-api tke
-            check_deployment_install tke-auth-controller tke
-            ;;
-        platform-post-install-check)
-            check_components_cr cluster
-            check_deployment_install tke-platform-api tke
-            check_deployment_install tke-platform-controller tke
-            ;;
-        platform-post-upgrade-check)
-            check_components_cr cluster
-            check_deployment_upgrade tke-platform-api tke
-            check_deployment_upgrade tke-platform-controller tke
-            ;;
         gateway-pre-install-check)
             check_components_cr client
             check_deployment_install tke-auth-api tke

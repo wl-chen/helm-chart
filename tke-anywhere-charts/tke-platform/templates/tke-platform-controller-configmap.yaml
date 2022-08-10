@@ -24,10 +24,6 @@ data:
     container_domain = "{{ .Values.controller.registryDomain }}"
     container_namespace = "{{ .Values.controller.registryNamespace }}"
 
-    [features]
-    monitor_storage_type = "{{ .Values.controller.monitorStorageType }}"
-    monitor_storage_addresses = "{{ .Values.controller.monitorStorageAddresses }}"
-
   tke-platform-config.yaml: |
     apiVersion: v1
     kind: Config

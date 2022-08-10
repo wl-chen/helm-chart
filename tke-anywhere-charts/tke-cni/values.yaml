@@ -1,7 +1,9 @@
 global:
   enabledCilium: true
+  registry: &registry ccr.ccs.tencentyun.com
 
 cilium:
+  registry: *registry
   cilium:
     labels:
       k8s-app: cilium
@@ -28,7 +30,7 @@ cilium:
                     - cilium
             topologyKey: kubernetes.io/hostname
     image:
-      repository: tkestack/cilium
+      repository: tdccimages/cilium
       tag: v1.9.5
       imagePullPolicy: IfNotPresent
     resources:
@@ -40,7 +42,7 @@ cilium:
         memory: 512Mi
     initContainer:
       image:
-        repository: tkestack/cilium
+        repository: tdccimages/cilium
         tag: v1.9.5
         imagePullPolicy: IfNotPresent
       resources:
@@ -74,7 +76,7 @@ cilium:
                       - operator
               topologyKey: kubernetes.io/hostname
       image:
-        repository: tkestack/cilium-operator-generic
+        repository: tdccimages/cilium-operator-generic
         tag: v1.9.5
         imagePullPolicy: IfNotPresent
       resources:
@@ -113,7 +115,7 @@ cilium:
                     values:
                       - hollow
       image:
-        repository: tkestack/cilium-router
+        repository: tdccimages/cilium-router
         tag: v0.1.0
         imagePullPolicy: IfNotPresent
       resources:
@@ -148,7 +150,7 @@ cilium:
               operator: Exists
     maxNodePodNum: 256
     image:
-      repository: tkestack/tke-eni-ipamd
+      repository: tdccimages/tke-eni-ipamd
       tag: v3.3.3
       imagePullPolicy: IfNotPresent
     resources:
@@ -169,7 +171,7 @@ cilium:
       name: ip-masq-agent
     affinity:
     image:
-      repository: tkestack/ip-masq-agent
+      repository: tdccimages/ip-masq-agent
       tag: v1.0.0
       imagePullPolicy: IfNotPresent
     resources:
