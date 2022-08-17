@@ -120,6 +120,8 @@ metadata:
 {{ toYaml .Values.ipamd.annotations | indent 4 }}
   {{- end }}
 spec:
+  strategy:
+    type: Recreate
   progressDeadlineSeconds: 600
   replicas: 1
   revisionHistoryLimit: 10

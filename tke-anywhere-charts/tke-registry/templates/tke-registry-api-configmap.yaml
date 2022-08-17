@@ -1,0 +1,230 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tke-registry-api
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  tke-registry-api.toml: |
+    registry_config = "/app/conf/tke-registry-config.yaml"
+
+    [authentication]
+    token_auth_file = "/app/certs/token.csv"
+    client_ca_file = "/app/certs/ca.crt"
+
+      [authentication.oidc]
+{{- if .Values.api.enableAuth }}
+      client_id = "default"
+      issuer_url = "https://tke-auth-api/oidc"
+      external_issuer_url = "https://tke-auth-api/oidc"
+      ca_file = "/app/certs/ca.crt"
+      username_prefix ="-"
+      username_claim = "name"
+      tenantid_claim = "federated_claims"
+      token_review_path = "/auth/authn"
+{{- else }}
+      client_id = {{ .Values.api.oIDCClientID }}
+      issuer_url = {{ .Values.api.oIDCIssuerURL }}
+  {{- if .Values.api.useOIDCCA }}
+      ca_file = "/app/certs/oidc-ca.crt"
+  {{- end}}
+{{- end }}
+
+      [authentication.requestheader]
+      client_ca_file = "/app/certs/front-proxy-ca.crt"
+      username_headers = "X-Remote-User"
+      group_headers = "X-Remote-Group"
+      extra_headers_prefix = "X-Remote-Extra-"
+
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [etcd]
+    servers = [
+      "{{ .Values.etcd.host }}"
+    ]
+    cafile = "/app/certs/etcd-ca.crt"
+    certfile = "/app/certs/etcd.crt"
+    keyfile = "/app/certs/etcd.key"
+
+    [generic]
+    external_scheme = "https"
+    external_hostname = "{{ .Values.api.domainSuffix }}"
+    external_port = 443
+    external_ca_file = "/app/certs/ca.crt"
+
+    [client]
+
+      [client.platform]
+      api_server = "https://tke-platform-api"
+      api_server_client_config = "/app/conf/tke-platform-config.yaml"
+
+{{- if .Values.api.enableBusiness }}
+      [client.business]
+      api_server = "https://tke-business-api"
+      api_server_client_config = "/app/conf/tke-business-config.yaml"
+{{- end }}
+
+{{- if .Values.api.enableAuth }}
+      [client.auth]
+      api_server = "https://tke-auth-api"
+      api_server_client_config = "/app/conf/tke-auth-config.yaml"
+{{- end }}
+
+  tke-registry-config.yaml: |
+    apiVersion: registry.config.tkestack.io/v1
+    kind: RegistryConfiguration
+    storage:
+      etcd:
+        cafile: "/app/certs/etcd-ca.crt"
+        certfile: "/app/certs/etcd.crt"
+        keyfile: "/app/certs/etcd.key"
+        endpoints:
+        - "{{ .Values.etcd.host }}"
+        prefix: "/chart_backend_bucket"
+{{- if .Values.filesystemEnabled }}
+      fileSystem:
+        rootDirectory: /storage
+{{- end }}
+{{- if .Values.s3Enabled }}
+      s3:
+{{- with .Values.s3 }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end }}
+      delete:
+        enabled: true
+      maintenance:
+        readonly:
+          enabled: false
+    security:
+      tokenPrivateKeyFile: /etc/registry/private_key.pem
+      tokenPublicKeyFile: /etc/registry/public_key.crt
+      adminPassword: "{{ .Values.api.adminPassword }}"
+      adminUsername: "{{ .Values.api.adminUsername }}"
+      httpSecret: "{{ .Values.api.adminPassword }}"
+    defaultTenant: default
+    domainSuffix: "{{ .Values.api.domainSuffix }}"
+
+{{- if .Values.api.harborEnabled }}
+    harborEnabled: true
+{{- end}}
+
+{{- if .Values.api.harborCAFile }}
+    harborCAFile: /app/certs/harbor-ca.crt
+{{- end}}
+
+
+  tke-auth-webhook.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-auth-api/auth/authz
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+    - context:
+        cluster: tke
+        user: admin-cert
+      name: tke
+{{- if .Values.api.enableAudit }}
+  audit-policy.yaml: |
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    omitStages:
+    - "RequestReceived"
+    - "ResponseStarted"
+    rules:
+    - level: None
+      resources:
+      - group: "registry.tkestack.io"
+        resources: ["configmaps", "*/status"]
+    - level: RequestResponse
+      verbs: ["create", "update", "patch", "delete", "deletecollection"]
+
+  audit-api-client-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          insecure-skip-tls-verify: true
+          server: https://tke-audit-api/apis/audit.tkestack.io/v1/events/sink/control-plane
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+        name: tke
+
+{{- end }}
+
+  tke-platform-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-platform-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
+{{- if .Values.api.enableBusiness }}
+  tke-business-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-business-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+{{- end }}
+
+{{- if .Values.api.enableAuth }}
+  tke-auth-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-auth-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+{{- end }}

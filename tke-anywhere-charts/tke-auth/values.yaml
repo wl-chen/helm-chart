@@ -24,7 +24,7 @@ api:
   replicas: 2
   image:
     repository: tdccimages/tke-auth-api-amd64
-    tag: v1.9.0
+    tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
     limits:
@@ -66,7 +66,7 @@ controller:
   replicas: 2
   image:
     repository: tdccimages/tke-auth-controller-amd64
-    tag: v1.9.0
+    tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
     limits:
@@ -102,7 +102,7 @@ kubectl:
     imagePullPolicy: IfNotPresent
 hookJob:
   webhookUpdate:
-    enable: false
+    enable: true
     parallelism: 1
     completions: 1
     ttlSecondsAfterFinishe: 5

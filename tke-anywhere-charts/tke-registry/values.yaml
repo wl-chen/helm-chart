@@ -1,0 +1,393 @@
+global:
+  enableDockerRegistry: true
+
+registry: ccr.ccs.tencentyun.com
+api:
+  labels:
+    app: tke-registry-api
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-registry-api
+  podAnnotations:
+  podLabels:
+    app: tke-registry-api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  adminPassword: admin
+  adminUsername: admin
+  domainSuffix: registry.tke.com
+  enableAudit: true
+  enableAuth: true
+  enableBusiness: false
+  harborCAFile: false
+  harborEnabled: false
+  image:
+    repository: tdccimages/tke-registry-api-amd64
+    tag: v1.9.0
+    imagePullPolicy: IfNotPresent
+  nodeName: 43.129.227.212 # 根据具体主机配置
+  oIDCIssuerURL: https://tke-auth-api/oidc
+  oIDCClientID: default
+  replicas: 2
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  useOIDCCA: false
+
+
+controller:
+  labels:
+    app: tke-registry-controller
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-registry-controller
+  podAnnotations:
+  podLabels:
+    app: tke-registry-controller
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 1
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                    - tke-registry-controller
+            topologyKey: kubernetes.io/hostname
+  adminPassword: admin
+  adminUsername: admin
+  defaultChartGroups: "public"
+  domainSuffix: registry.tke.com
+  enableAuth: true
+  enableBusiness: false
+  image:
+    repository: tdccimages/tke-registry-controller-amd64
+    tag: v1.9.0
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  nodeName: 10.0.72.126
+  replicas: 2
+
+
+etcd:
+  host: https://etcd.kube-system:2379
+
+certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
+  mountPath: /etc/kubernetes/pki
+  dnsNames:
+    - registry.tke.com
+    - "*.registry.tke.com"
+  uris:
+  ipAddresses:
+
+kubectl:
+  image:
+    repository: tdccimages/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent
+
+
+filesystemEnabled: true
+baremetalStorage: true # 对应hostpath
+persistentStorage: false
+pvcName: nfs-pvc
+storageClassName: nfs-client
+
+
+s3Enabled: false
+# add custom s3Storage, for example:
+# s3:
+#   bucket:
+#   region:
+#   accessKey:
+#   secretKey:
+#   regionEndpoint:
+#   encrypt:
+#   keyID:
+#   secure:
+#   skipVerify:
+#   v4Auth:
+#   chunkSize:
+#   multipartCopyChunkSize:
+#   multipartCopyMaxConcurrency:
+#   multipartCopyThresholdSize:
+#   rootDirectory:
+#   storageClass:
+#   userAgent:
+#   objectACL:
+s3: {}
+
+
+
+
+# docker-registry子包的变量值
+docker-registry:
+  # Default values for docker-registry.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+  replicaCount: 2
+
+  updateStrategy: {}
+    # type: RollingUpdate
+    # rollingUpdate:
+  #   maxSurge: 1
+  #   maxUnavailable: 0
+
+  podAnnotations: {}
+  podLabels: {}
+
+  serviceAccount:
+    create: false
+    name: ""
+    annotations: {}
+
+  image:
+    repository: ccr.ccs.tencentyun.com/tdccimages/registry
+    tag: 2.7.1
+    pullPolicy: IfNotPresent
+    # imagePullSecrets:
+    # - name: docker
+  service:
+    name: registry
+    type: ClusterIP
+    # sessionAffinity: None
+    # sessionAffinityConfig: {}
+    # clusterIP:
+    port: 5000
+    # nodePort:
+    # loadBalancerIP:
+    # loadBalancerSourceRanges:
+    annotations: {}
+    # foo.io/bar: "true"
+  ingress:
+    enabled: true
+    className: nginx
+    path: /
+    # Used to create an Ingress record.
+    hosts:
+      # - chart-example.local
+      - mirrors.tke.com
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: 1000m
+      nginx.ingress.kubernetes.io/proxy-buffer-size: 10k
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    labels: {}
+    tls:
+    # Secrets must be manually created in the namespace.
+    # - secretName: chart-example-tls
+    #   hosts:
+    #     - chart-example.local
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #  cpu: 100m
+    #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+  persistence:
+    accessMode: 'ReadWriteMany'
+    enabled: true
+    size: 40Gi
+    storageClass: 'nfs-client'
+
+  # set the type of filesystem to use: filesystem, s3
+  storage: filesystem
+
+  # Set this to name of secret for tls certs
+  # tlsSecretName: registry.docker.example.com
+#  secrets:
+#    haSharedSecret: "user:$2y$05$xHZ48VoII/DfCr0XnSCEPePnNDqRgLhxSY4/fc.lpN.83UbrSFHu6"
+#    htpasswd: ""
+  # Secrets for Azure
+  #   azure:
+  #     accountName: ""
+  #     accountKey: ""
+  #     container: ""
+  # Secrets for S3 access and secret keys
+  # Use a secretRef with keys (accessKey, secretKey) for secrets stored outside the chart
+  #   s3:
+  #     secretRef: ""
+  #     accessKey: ""
+  #     secretKey: ""
+  # Secrets for Swift username and password
+  #   swift:
+  #     username: ""
+  #     password: ""
+
+  # Options for s3 storage type:
+  # s3:
+  #  region: us-east-1
+  #  regionEndpoint: s3.us-east-1.amazonaws.com
+  #  bucket: my-bucket
+  #  rootdirectory: /object/prefix
+  #  encrypt: false
+  #  secure: true
+
+  # Options for swift storage type:
+  # swift:
+  #  authurl: http://swift.example.com/
+  #  container: my-container
+
+  # https://docs.docker.com/registry/recipes/mirror/
+  proxy:
+    enabled: true
+    remoteurl: https://ccr.ccs.tencentyun.com
+    username: ""
+    password: ""
+    # the ref for a secret stored outside of this chart
+    # Keys: proxyUsername, proxyPassword
+    secretRef: ""
+
+  metrics:
+    enabled: false
+    port: 5001
+    # Create a prometheus-operator servicemonitor
+    serviceMonitor:
+      enabled: false
+      labels: {}
+    # prometheus-operator PrometheusRule defining alerting rules for a Prometheus instance
+    prometheusRule:
+      enabled: false
+      labels: {}
+      rules: {}
+
+  configData:
+    version: 0.1
+    log:
+      fields:
+        service: registry
+    storage:
+      cache:
+        blobdescriptor: inmemory
+    http:
+      addr: :5000
+      headers:
+        X-Content-Type-Options: [nosniff]
+      debug:
+        addr: :5001
+        prometheus:
+          enabled: false
+          path: /metrics
+    health:
+      storagedriver:
+        enabled: true
+        interval: 10s
+        threshold: 3
+
+  securityContext:
+    enabled: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  priorityClassName: ""
+
+  podDisruptionBudget: {}
+  # maxUnavailable: 1
+  # minAvailable: 2
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 60 # available only on Kubernetes ≥1.23 [required "autoscaling/v2"]
+    behavior: {} # available only on Kubernetes ≥1.23 [required "autoscaling/v2"]
+  #   scaleDown:
+  #     stabilizationWindowSeconds: 300
+  #     policies:
+  #     - type: Percent
+  #       value: 100
+  #       periodSeconds: 15
+  #   scaleUp:
+  #     stabilizationWindowSeconds: 0
+  #     policies:
+  #     - type: Percent
+  #       value: 100
+  #       periodSeconds: 15
+  #     - type: Pods
+  #       value: 4
+  #       periodSeconds: 15
+  #     selectPolicy: Max
+
+  nodeSelector: {}
+
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: "NoSchedule"
+
+  extraVolumeMounts: []
+  ## Additional volumeMounts to the registry container.
+  #  - mountPath: /secret-data
+  #    name: cloudfront-pem-secret
+  #    readOnly: true
+
+  extraVolumes: []
+  ## Additional volumes to the pod.
+  #  - name: cloudfront-pem-secret
+  #    secret:
+  #      secretName: cloudfront-credentials
+  #      items:
+  #        - key: cloudfront.pem
+  #          path: cloudfront.pem
+  #          mode: 511
+
+  extraEnvVars: []
+  ## Additional ENV variables to set
+  # - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+  #   value: "/var/lib/example"
+
+
+

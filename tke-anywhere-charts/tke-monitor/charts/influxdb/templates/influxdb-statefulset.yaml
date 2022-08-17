@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+{{ toYaml .Values.labels | indent 4 }}
+  name: influxdb
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.annotations }}
+  annotations:
+{{ toYaml .Values.annotations | indent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.replicas }}
+  serviceName: influxdb
+  selector:
+{{ toYaml .Values.selector | indent 4 }}
+  template:
+    metadata:
+      {{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+      {{- end }}
+      labels:
+{{ toYaml .Values.podLabels | indent 8 }}
+    spec:
+      affinity:
+{{ toYaml .Values.affinity | indent 8 }}
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: "NoSchedule"
+      containers:
+      - name: influxdb
+        image: "{{ .Values.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+        livenessProbe:
+          tcpSocket:
+            port: 8086
+          initialDelaySeconds: 1
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 8086
+          initialDelaySeconds: 1
+          periodSeconds: 10
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/influxdb
+          subPath:
+{{- if .Values.baremetalStorage }}
+      nodeName: {{ .Values.nodeName }}
+{{- end }}
+      hostNetwork: true
+      volumes:
+      - name: data
+{{- if .Values.baremetalStorage }}
+        hostPath:
+          path: /var/lib/influxdb
+          type: DirectoryOrCreate
+{{- end }}
+{{- if .Values.persistentStorage }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.pvcName }}
+{{- end }}

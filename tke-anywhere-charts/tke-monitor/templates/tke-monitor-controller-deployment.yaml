@@ -3,7 +3,7 @@ apiVersion: apps/v1
 metadata:
   labels:
 {{ toYaml .Values.controller.labels | indent 4 }}
-  name: tke-platform-controller
+  name: tke-monitor-controller
   namespace: {{ .Release.Namespace | quote }}
   {{- if .Values.controller.annotations }}
   annotations:
@@ -31,19 +31,8 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: "NoSchedule"
-      initContainers:
-        - command:
-            - sh
-            - -c
-            - cp -r /data/res /app/provider/baremetal/
-          image: {{ .Values.registry }}/{{ .Values.controller.providerRes.image.repository }}:{{ .Values.controller.providerRes.image.tag }}
-          imagePullPolicy: "{{ .Values.controller.providerRes.image.imagePullPolicy }}"
-          name: provider-res
-          volumeMounts:
-            - mountPath: /app/provider/baremetal
-              name: provider-volume
       containers:
-        - name: tke-platform-controller
+        - name: tke-monitor-controller
           image: "{{ .Values.registry }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
@@ -62,7 +51,7 @@ spec:
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
               ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
               ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
-              /app/bin/tke-platform-controller -C=/app/conf/tke-platform-controller.toml;
+              /app/bin/tke-monitor-controller -C=/app/conf/tke-monitor-controller.toml;
           volumeMounts:
             - name: cert-manager-certs
               mountPath: /app/certs/cert-manager
@@ -70,29 +59,13 @@ spec:
               mountPath: /app/certs/cluster
             - name: certs
               mountPath: /app/certs
-            - name: tke-platform-controller-volume
+            - name: tke-monitor-controller-volume
               mountPath: /app/conf
-            - name: provider-volume
-              mountPath: /app/provider/baremetal
-            - name: provider-config-volume
-              mountPath: /app/provider/baremetal/conf/
-            - name: docker-volume
-              mountPath: /app/provider/baremetal/conf/docker/
-            - name: kubelet-volume
-              mountPath: /app/provider/baremetal/conf/kubelet/
-            - name: kubeadm-volume
-              mountPath: /app/provider/baremetal/conf/kubeadm/
-            - name: gpu-manifests-volume
-              mountPath: /app/provider/baremetal/manifests/gpu/
-            - name: keepalived-manifests-volume
-              mountPath: /app/provider/baremetal/manifests/keepalived/
-            - name: metrics-server-manifests-volume
-              mountPath: /app/provider/baremetal/manifests/metrics-server/
           ports:
-            - containerPort: 9445
+            - containerPort: 9456
           livenessProbe:
             httpGet:
-              port: 9445
+              port: 9456
               path: /healthz
               scheme: HTTPS
             initialDelaySeconds: 15
@@ -123,7 +96,7 @@ spec:
                   path: ca.key
                 optional: false
             - secret:
-                name: tke-platform-server-secret
+                name: tke-monitor-server-secret
                 items:
                 - key: tls.crt
                   path: server.crt
@@ -146,29 +119,6 @@ spec:
                 - key: tls.key
                   path: webhook.key
                 optional: false
-        - name: tke-platform-controller-volume
+        - name: tke-monitor-controller-volume
           configMap:
-            name: tke-platform-controller
-        - name: provider-volume
-          emptyDir: {}
-        - name: provider-config-volume
-          configMap:
-            name: provider-config
-        - name: docker-volume
-          configMap:
-            name: docker
-        - name: kubelet-volume
-          configMap:
-            name: kubelet
-        - name: kubeadm-volume
-          configMap:
-            name: kubeadm
-        - name: gpu-manifests-volume
-          configMap:
-            name: gpu-manifests
-        - name: keepalived-manifests-volume
-          configMap:
-            name: keepalived-manifests
-        - name: metrics-server-manifests-volume
-          configMap:
-            name: metrics-server-manifests
+            name: tke-monitor-controller

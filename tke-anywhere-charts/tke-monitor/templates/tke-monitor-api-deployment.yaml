@@ -1,34 +1,29 @@
+kind: Deployment
 apiVersion: apps/v1
-kind: DaemonSet
 metadata:
-  {{- if .Values.labels }}
-  annotations:
-{{ toYaml .Values.labels | indent 4 }}
-  {{- end }}
-  name: tke-gateway
+  labels:
+{{ toYaml .Values.api.labels | indent 4 }}
+  name: tke-monitor-api
   namespace: {{ .Release.Namespace | quote }}
-  {{- if .Values.annotations }}
+  {{- if .Values.api.annotations }}
   annotations:
-{{ toYaml .Values.annotations | indent 4 }}
+{{ toYaml .Values.api.annotations | indent 4 }}
   {{- end }}
 spec:
+  replicas: {{ .Values.api.replicas }}
   selector:
-{{ toYaml .Values.selector | indent 4 }}
+{{ toYaml .Values.api.selector | indent 4 }}
   template:
     metadata:
-      labels:
-      {{- if .Values.podAnnotations }}
+      {{- if .Values.api.podAnnotations }}
       annotations:
-{{ toYaml .Values.podAnnotations | indent 8 }}
+{{ toYaml .Values.api.podAnnotations | indent 8 }}
       {{- end }}
       labels:
-{{ toYaml .Values.podLabels | indent 8 }}
+{{ toYaml .Values.api.podLabels | indent 8 }}
     spec:
-      {{- if .Values.affinity }}
       affinity:
-{{ toYaml .Values.affinity | indent 8 }}
-      {{- end }}
-      dnsPolicy: ClusterFirstWithHostNet
+{{ toYaml .Values.api.affinity | indent 8 }}
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
@@ -37,9 +32,9 @@ spec:
         operator: Exists
         effect: "NoSchedule"
       containers:
-        - name: tke-gateway
-          image: "{{ .Values.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+        - name: tke-monitor-api
+          image: "{{ .Values.registry }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: "{{ .Values.api.image.imagePullPolicy }}"
           command:
             - /bin/sh
             - -c 
@@ -56,48 +51,45 @@ spec:
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
               ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
               ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
-              /app/bin/tke-gateway -C=/app/conf/tke-gateway.toml --oidc-client-secret=$(OIDC_CLIENT_SECRET);
-          env:
-            - name: OIDC_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: tke-auth-cluster-certs
-                  key: oidc-client-secret
-                  optional: false
+              ln -s /app/certs/cert-manager/token.csv /app/certs/token.csv;
+{{- if .Values.api.enableAudit }}
+              /app/bin/tke-monitor-api -C=/app/conf/tke-monitor-api.toml --audit-policy-file=/app/conf/audit-policy.yaml --audit-webhook-config-file=/app/conf/audit-api-client-config.yaml;
+{{- else -}}
+              /app/bin/tke-monitor-api -C=/app/conf/tke-monitor-api.toml;
+{{- end }}
           volumeMounts:
             - name: cert-manager-certs
               mountPath: /app/certs/cert-manager
             - name: cluster-certs
               mountPath: /app/certs/cluster
-            - name: certs
+            - name: certs-volume
               mountPath: /app/certs
-            - name: tke-gateway-volume
+            - name: tke-monitor-api-volume
               mountPath: /app/conf
+          ports:
+            - containerPort: 9455
           readinessProbe:
             httpGet:
-              port: 80
-              path: /healthz
-              scheme: HTTP
+              port: 9455
+              path: /healthz/ping
+              scheme: HTTPS
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              port: 80
+              port: 9455
               path: /healthz
-              scheme: HTTP
+              scheme: HTTPS
             initialDelaySeconds: 15
             periodSeconds: 20
           resources:
             limits:
-              cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.api.resources.limits.cpu }}
+              memory: {{ .Values.api.resources.limits.memory }}
             requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.api.resources.requests.cpu }}
+              memory: {{ .Values.api.resources.requests.memory }}
       volumes:
-        - name: tke-gateway-volume
-          configMap:
-            name: tke-gateway
         - name: certs
           emptyDir: {}
         - name: cluster-certs
@@ -116,7 +108,7 @@ spec:
                   path: ca.key
                 optional: false
             - secret:
-                name: tke-gateway-server-secret
+                name: tke-monitor-server-secret
                 items:
                 - key: tls.crt
                   path: server.crt
@@ -139,3 +131,13 @@ spec:
                 - key: tls.key
                   path: webhook.key
                 optional: false
+            - secret:
+                name: tke-monitor-cluster-secrets
+                items:
+                - key: token.csv
+                  path: token.csv
+                optional: false
+        - name: tke-monitor-api-volume
+          configMap:
+            name: tke-monitor-api
+            

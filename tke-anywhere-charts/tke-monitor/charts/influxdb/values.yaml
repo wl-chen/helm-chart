@@ -1,0 +1,33 @@
+registry: ccr.ccs.tencentyun.com
+
+labels:
+  app: influxdb
+annotations:
+selector:
+  matchLabels:
+    app: influxdb
+podAnnotations:
+podLabels:
+  app: influxdb
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      - matchExpressions:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+
+replicas: 1
+image:
+  repository: tdccimages/influxdb
+  tag: 1.7.9
+  imagePullPolicy: IfNotPresent
+
+baremetalStorage: true
+nodeName: 127.0.0.1
+persistentStorage: false
+pvcName: nfs-pvc
+storageClassName: nfs-client

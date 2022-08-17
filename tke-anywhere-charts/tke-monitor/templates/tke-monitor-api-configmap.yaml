@@ -1,0 +1,183 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-monitor-api
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  tke-monitor-api.toml: |
+    monitor_config = "/app/conf/tke-monitor-config.yaml"
+
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [etcd]
+    servers = [
+      "{{ .Values.etcd.host }}"
+    ]
+    cafile = "/app/certs/etcd-ca.crt"
+    certfile = "/app/certs/etcd.crt"
+    keyfile = "/app/certs/etcd.key"
+
+    [generic]
+    external_hostname = "tke-monitor-api"
+    external_port = 443
+
+    [authentication]
+    token_auth_file = "/app/certs/token.csv"
+    client_ca_file = "/app/certs/ca.crt"
+
+      [authentication.oidc]
+{{- if .Values.enableAuth }}
+      client_id = "default"
+      issuer_url = "https://tke-auth-api/oidc"
+      external_issuer_url = "https://tke-auth-api/oidc"
+      ca_file = "/app/certs/ca.crt"
+      username_prefix ="-"
+      username_claim = "name"
+      groups_claim = "groups"
+      tenantid_claim = "federated_claims"
+{{- else }}
+      client_id = {{ .Values.api.oIDCClientID }}
+      issuer_url = {{ .Values.api.oIDCIssuerURL }}
+  {{- if .Values.api.useOIDCCA }}
+      ca_file = "/app/certs/oidc-ca.crt"
+  {{- end}}
+{{- end }}
+
+      [authentication.requestheader]
+      client_ca_file = "/app/certs/front-proxy-ca.crt"
+      username_headers = "X-Remote-User"
+      group_headers = "X-Remote-Group"
+      extra_headers_prefix = "X-Remote-Extra-"
+
+    [client]
+
+      [client.platform]
+      api_server = "https://tke-platform-api"
+      api_server_client_config = "/app/conf/tke-platform-config.yaml"
+
+{{- if .Values.enableBusiness }}
+      [client.business]
+      api_server = "https://tke-business-api"
+      api_server_client_config = "/app/conf/tke-business-config.yaml"
+{{- end }}
+
+  tke-auth-webhook.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-auth-api/auth/authz
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+    - context:
+        cluster: tke
+        user: admin-cert
+      name: tke
+
+  tke-platform-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-platform-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
+
+{{- if .Values.enableBusiness }}
+  tke-business-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-business-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+{{- end }}
+
+  tke-monitor-config.yaml: |
+    apiVersion: monitor.config.tkestack.io/v1
+    kind: MonitorConfiguration
+    storage:
+{{- if eq .Values.storage.type "influxDB" }}
+      influxDB:
+        servers:
+          - address: {{ .Values.storage.address }}
+            username: {{ .Values.storage.username }}
+            password: {{ .Values.storage.password }}
+            timeoutSeconds: 10
+{{- end }}
+{{- if eq .Values.storage.type "elasticsearch" }}
+      elasticSearch:
+        servers:
+          - address: {{ .Values.storage.address }}
+            username: {{ .Values.storage.username }}
+            password: {{ .Values.storage.password }}
+{{- end }}
+{{- if eq .Values.storage.type "thanos" }}
+      thanos:
+        servers:
+          - address: {{ .Values.storage.address }}
+{{- end }}
+
+{{- if .Values.enableAudit }}
+  audit-policy.yaml: |
+    apiVersion: audit.k8s.io/v1
+    kind: Policy
+    omitStages:
+    - "RequestReceived"
+    - "ResponseStarted"
+    rules:
+    - level: None
+      resources:
+      - group: "monitor.tkestack.io"
+        resources: ["configmaps", "*/status"]
+    - level: RequestResponse
+      verbs: ["create", "update", "patch", "delete", "deletecollection"]
+
+  audit-api-client-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          insecure-skip-tls-verify: true
+          server: https://tke-audit-api/apis/audit.tkestack.io/v1/events/sink/control-plane
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+        name: tke
+
+  {{- end }}

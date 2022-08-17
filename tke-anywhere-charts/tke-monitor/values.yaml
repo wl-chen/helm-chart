@@ -1,41 +1,30 @@
+global:
+  enableInfluxdb: true
+
 registry: ccr.ccs.tencentyun.com
 etcd:
   host: https://etcd.kube-system:2379
-provider:
-  config: |    
-    platformAPIClientConfig: conf/tke-platform-config.yaml
-    applicationAPIClientConfig: conf/tke-application-config.yaml
-    registry:
-      prefix: registry.tke.com/library
-      ip: 127.0.0.1
-    audit:
-      address: ""
-    feature:
-      skipConditions: []
-    docker:
-      extraArgs: {}
-    kubelet:
-      extraArgs: {}
-    apiServer:
-      extraArgs: {}
-    controllerManager:
-      extraArgs: {}
-    scheduler:
-      extraArgs: {}
-    authzWebhook:
-      endpoint: https://127.0.0.1:31138/auth/authz
-    business:
-      enabled: true
+  
+enableAuth: true
+enableAudit: true
+enableBusiness: false
+storage:
+  # influxDB, elasticsearch, thanos
+  type: influxDB
+  # 默认的master[0]内网ip
+  address: http://influxdb.tke.svc.cluster.local:8086
+  username: ""
+  password: ""
 api:
   labels:
-    app: tke-platform-api
+    app: tke-monitor-api
   annotations:
   selector:
     matchLabels:
-      app: tke-platform-api
+      app: tke-monitor-api
   podAnnotations:
   podLabels:
-    app: tke-platform-api
+    app: tke-monitor-api
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -48,34 +37,32 @@ api:
             operator: Exists
   replicas: 2
   image:
-    repository: tdccimages/tke-platform-api-amd64
-    tag: industry-cloud-1.9
+    repository: tdccimages/tke-monitor-api-amd64
+    tag: v1.9.0
     imagePullPolicy: IfNotPresent
   resources:
     limits:
-      cpu: 150m
-      memory: 512Mi
-    requests:
       cpu: 100m
       memory: 256Mi
-  enableAuth: true
-  enableAudit: true
+    requests:
+      cpu: 50m
+      memory: 128Mi
   # OIDC认证方式客户端id，默认为default
   oIDCClientID: default
   # OIDC认证方式的issuer_url，默认为https://tke-auth-api/oidc
   oIDCIssuerURL: https://tke-auth-api/oidc
   # 是否开启OIDC认证，默认不开启
-  useOIDCCA:
+  useOIDCCA: false
 controller:
   labels:
-    app: tke-platform-controller
+    app: tke-monitor-controller
   annotations:
   selector:
     matchLabels:
-      app: tke-platform-controller
+      app: tke-monitor-controller
   podAnnotations:
   podLabels:
-    app: tke-platform-controller
+    app: tke-monitor-controller
   affinity:
     nodeAffinity:
       requiredDuringSchedulingIgnoredDuringExecution:
@@ -87,24 +74,19 @@ controller:
           - key: node-role.kubernetes.io/master
             operator: Exists
   replicas: 2
-  providerRes:
-    image: 
-      repository: tdccimages/provider-res-amd64
-      tag: v1.21.4-3
-      imagePullPolicy: IfNotPresent
   image:
-    repository: tdccimages/tke-platform-controller-amd64
-    tag: industry-cloud-1.9
+    repository: tdccimages/tke-monitor-controller-amd64
+    tag: v1.9.0
     imagePullPolicy: IfNotPresent
   resources:
     limits:
       cpu: 100m
-      memory: 1Gi
+      memory: 256Mi
     requests:
       cpu: 50m
       memory: 128Mi
-  registryDomain: docker.io
-  registryNamespace: tkestack
+  registryDomain:
+  registryNamespace:
 certificate:
   serverCertDuration: 876000h
   serverCertRenewBefore: 875900h
@@ -117,3 +99,38 @@ kubectl:
     repository: tdccimages/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent
+  
+influxdb:
+  registry: ccr.ccs.tencentyun.com
+
+  labels:
+    app: influxdb
+  annotations:
+  selector:
+    matchLabels:
+      app: influxdb
+  podAnnotations:
+  podLabels:
+    app: influxdb
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+
+  replicas: 1
+  image:
+    repository: tdccimages/influxdb
+    tag: 1.7.9
+    imagePullPolicy: IfNotPresent
+
+  baremetalStorage: true
+  nodeName: 127.0.0.1
+  persistentStorage: false
+  pvcName: nfs-pvc
+  storageClassName: nfs-client

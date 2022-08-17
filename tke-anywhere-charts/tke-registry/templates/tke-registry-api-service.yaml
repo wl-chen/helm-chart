@@ -1,0 +1,15 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1.registry.tkestack.io
+  annotations:
+    cert-manager.io/inject-ca-from: tke/tke-ca
+spec:
+  group: registry.tkestack.io
+  groupPriorityMinimum: 1000
+  service:
+    name: tke-registry-api
+    namespace: {{ .Release.Namespace | quote }}
+    port: 443
+  version: v1
+  versionPriority: 5

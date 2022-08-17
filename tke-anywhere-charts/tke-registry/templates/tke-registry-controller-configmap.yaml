@@ -1,0 +1,129 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-registry-controller
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  tke-registry-controller.toml: |
+    registry_config = "/app/conf/registry-config.yaml"
+
+    [registry_setting]
+    default_system_chartgroups = "{{ .Values.controller.defaultChartGroups }}"
+
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [client]
+
+      [client.registry]
+      api_server = "https://tke-registry-api"
+      api_server_client_config = "/app/conf/tke-registry-config.yaml"
+
+{{- if .Values.controller.enableBusiness }}
+      [client.business]
+      api_server = "https://tke-business-api"
+      api_server_client_config = "/app/conf/tke-business-config.yaml"
+{{- end }}
+
+{{- if .Values.controller.enableAuth }}
+      [client.auth]
+      api_server = "https://tke-auth-api"
+      api_server_client_config = "/app/conf/tke-auth-config.yaml"
+{{- end }}
+
+  registry-config.yaml: |
+    apiVersion: registry.config.tkestack.io/v1
+    kind: RegistryConfiguration
+    storage:
+      etcd:
+        cafile: "/app/certs/etcd-ca.crt"
+        certfile: "/app/certs/etcd.crt"
+        keyfile: "/app/certs/etcd.key"
+        endpoints:
+        - "{{ .Values.etcd.host }}"
+        prefix: "/chart_backend_bucket"
+{{- if .Values.filesystemEnabled }}
+      fileSystem:
+        rootDirectory: /storage
+{{- end }}
+{{- if .Values.s3Enabled }}
+      s3:
+{{- with .Values.s3 }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- end }}
+      delete:
+        enabled: true
+    security:
+      tokenPrivateKeyFile: /etc/registry/private_key.pem
+      tokenPublicKeyFile: /etc/registry/public_key.crt
+      adminPassword: "{{ .Values.controller.adminPassword }}"
+      adminUsername: "{{ .Values.controller.adminUsername }}"
+      httpSecret: "{{ .Values.controller.adminPassword }}"
+    defaultTenant: default
+    domainSuffix: "{{ .Values.controller.domainSuffix }}"
+
+  tke-registry-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-registry-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
+{{- if .Values.controller.enableBusiness }}
+  tke-business-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-business-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+{{- end }}
+
+{{- if .Values.controller.enableAuth }}
+  tke-auth-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-auth-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+{{- end }}

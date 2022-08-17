@@ -10,7 +10,7 @@ podLabels:
 affinity:
 image:
   repository: tdccimages/tke-gateway-amd64
-  tag: v1.9.0
+  tag: industry-cloud-1.9
   imagePullPolicy: IfNotPresent
 resources:
   limits:

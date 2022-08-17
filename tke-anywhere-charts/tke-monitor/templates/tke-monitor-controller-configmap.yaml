@@ -1,0 +1,123 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-monitor-controller
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  tke-monitor-controller.toml: |
+    monitor_config = "/app/conf/tke-monitor-config.yaml"
+
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [client]
+
+      [client.monitor]
+      api_server = "https://tke-monitor-api"
+      api_server_client_config = "/app/conf/tke-monitor-api-config.yaml"
+
+{{- if .Values.enableBusiness }}
+      [client.business]
+      api_server = "https://tke-business-api"
+      api_server_client_config = "/app/conf/tke-business-api-config.yaml"
+{{- end }}
+
+      [client.platform]
+      api_server = "https://tke-platform-api"
+      api_server_client_config = "/app/conf/tke-platform-config.yaml"
+
+      [registry]
+      container_domain = "{{ .Values.controller.registryDomain }}"
+      container_namespace = "{{ .Values.controller.registryNamespace }}"
+
+      [features]
+      monitor_storage_type = "{{ .Values.storage.type }}"
+      monitor_storage_addresses = "{{ .Values.storage.address }}"
+
+  tke-monitor-api-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-monitor-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
+  tke-platform-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-platform-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+
+{{- if .Values.enableBusiness }}
+  tke-business-api-config.yaml: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: tke
+        cluster:
+          certificate-authority: /app/certs/ca.crt
+          server: https://tke-business-api
+    users:
+      - name: admin-cert
+        user:
+          client-certificate: /app/certs/admin.crt
+          client-key: /app/certs/admin.key
+    current-context: tke
+    contexts:
+      - context:
+          cluster: tke
+          user: admin-cert
+        name: tke
+{{- end }}
+
+  tke-monitor-config.yaml: |
+    apiVersion: monitor.config.tkestack.io/v1
+    kind: MonitorConfiguration
+    storage:
+{{- if eq .Values.storage.type "influxDB" }}
+      influxDB:
+        servers:
+          - address: {{ .Values.storage.address }}
+            username: {{ .Values.storage.username }}
+            password: {{ .Values.storage.password }}
+            timeoutSeconds: 10
+{{- end }}
+{{- if eq .Values.storage.type "elasticsearch" }}
+      elasticSearch:
+        servers:
+          - address: {{ .Values.storage.address }}
+            username: {{ .Values.storage.username }}
+            password: {{ .Values.storage.password }}
+{{- end }}
+{{- if eq .Values.storage.type "thanos" }}
+      thanos:
+        servers:
+          - address: {{ .Values.storage.address }}
+{{- end }}
