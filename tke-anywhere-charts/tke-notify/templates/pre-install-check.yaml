@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: tke-notify-pre-install-check
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  labels:
+    app: tke-notify-pre-install-check
+spec:
+  ttlSecondsAfterFinished: 5
+  template:
+    metadata:
+      labels:
+        app: tke-notify-pre-install-check
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: "NoSchedule"
+      containers:
+        - name: kubectl
+          image: "{{ .Values.notify }}/{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+          command: ['/app/hook/chart-hook-check.sh']
+          args:
+            - notify-pre-install-check
+          volumeMounts:
+            - name: chart-hook-check
+              mountPath: /app/hook
+      volumes:
+        - name: chart-hook-check
+          configMap:
+            name: tke-notify-chart-hook-check
+            defaultMode: 0774
+      restartPolicy: OnFailure

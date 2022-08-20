@@ -52,7 +52,7 @@ spec:
               ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
               ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               ln -s /app/certs/cert-manager/token.csv /app/certs/token.csv;
-{{- if .Values.api.enableAudit }}
+{{- if .Values.enableAudit }}
               /app/bin/tke-registry-api -C=/app/conf/tke-registry-api.toml --audit-policy-file=/app/conf/audit-policy.yaml --audit-webhook-config-file=/app/conf/audit-api-client-config.yaml;
 {{- else -}}
               /app/bin/tke-registry-api -C=/app/conf/tke-registry-api.toml
@@ -70,8 +70,6 @@ spec:
             - name: registry-data
               mountPath: /storage
 {{- end }}
-            - name: tke-registry-api-secret
-              mountPath: /etc/registry
           ports:
             - containerPort: 9453
           readinessProbe:
@@ -95,8 +93,8 @@ spec:
             requests:
               cpu: {{ .Values.api.resources.requests.cpu }}
               memory: {{ .Values.api.resources.requests.memory }}
-{{- if .Values.baremetalStorage }}
-      nodeName: {{ .Values.api.nodeName }}
+{{- if not .Values.persistence.enabled }}
+      nodeName: {{ .Values.nodeName }}
 {{- end }}
       volumes:
         - name: tke-registry-api-volume
@@ -149,23 +147,14 @@ spec:
                     - key: token.csv
                       path: token.csv
                   optional: false
-{{- if .Values.filesystemEnabled }}
+{{- if eq .Values.storage "filesystem" }}
         - name: registry-data
-  {{- if .Values.baremetalStorage }}
+  {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.pvcName }}
+  {{- else }}
           hostPath:
             path: /var/lib/tke-registry-api
             type: DirectoryOrCreate
   {{- end }}
-  {{- if .Values.persistentStorage }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.pvcName }}
-  {{- end }}
 {{- end }}
-        - name: tke-registry-api-secret
-          secret:
-            secretName: tke-registry-api
-
-
-
-
-

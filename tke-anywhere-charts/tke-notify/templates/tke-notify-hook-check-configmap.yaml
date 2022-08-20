@@ -1,0 +1,82 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-notify-chart-hook-check
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  chart-hook-check.sh: |
+    #!/bin/bash
+
+    function check_deployment_install {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi 
+        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.readyReplicas}") ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    function check_deployment_upgrade {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi 
+        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.updatedReplicas}") ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+        
+    }
+
+    function check_components_cr {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get $1 -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    CHECK_TYPE=$1
+    echo $CHECK_TYPE
+    case $CHECK_TYPE in
+        notify-pre-install-check)
+            check_components_cr client
+            check_deployment_install tke-auth-api tke
+            check_deployment_install tke-auth-controller tke
+            ;;
+        notify-post-install-check)
+            check_components_cr messages
+            check_deployment_install tke-notify-api tke
+            check_deployment_install tke-notify-controller tke
+            ;;
+        notify-post-upgrade-check)
+            check_components_cr messages
+            check_deployment_upgrade tke-notify-api tke
+            check_deployment_upgrade tke-notify-controller tke
+            ;;
+    esac

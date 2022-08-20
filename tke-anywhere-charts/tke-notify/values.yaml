@@ -1,0 +1,105 @@
+notify: ccr.ccs.tencentyun.com
+
+
+enableAuth: true
+enableAudit: true
+
+api:
+  labels:
+    app: tke-notify-api
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-notify-api
+  podAnnotations:
+  podLabels:
+    app: tke-notify-api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  replicas: 2
+  image:
+    repository: tdccimages/tke-notify-api-amd64
+    tag: industry-cloud-1.9
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  oIDCClientID: default
+  oIDCIssuerURL: https://tke-auth-api/oidc
+  useOIDCCA:
+
+controller:
+  labels:
+    app: tke-notify-controller
+  annotations:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tke-notify-controller
+  podAnnotations:
+  podLabels:
+    app: tke-notify-controller
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  image:
+    repository: tdccimages/tke-notify-controller-amd64
+    tag: industry-cloud-1.9
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+etcd:
+  host: https://etcd.kube-system:2379
+
+certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
+  mountPath: /etc/kubernetes/pki
+  dnsNames:
+  uris:
+  ipAddresses:
+
+kubectl:
+  image:
+    repository: tdccimages/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent
+
+
+
+
+
+
+
+
+
+
+
+
+
+

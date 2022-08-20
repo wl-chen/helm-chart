@@ -10,13 +10,17 @@ metadata:
   labels:
     app: tke-platform-pre-install-check
 spec:
+  ttlSecondsAfterFinished: 5
   template:
     metadata:
       labels:
-        app: platform-pre-install-check
+        app: tke-platform-pre-install-check
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: "NoSchedule"
       containers:

@@ -52,7 +52,7 @@ spec:
               ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
               ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               ln -s /app/certs/cert-manager/token.csv /app/certs/token.csv;
-{{- if .Values.api.enableAudit }}
+{{- if .Values.enableAudit }}
               /app/bin/tke-auth-api -C=/app/conf/tke-auth-api.toml --init-client-secret=$(OIDC_CLIENT_SECRET) --audit-policy-file=/app/conf/audit-policy.yaml --audit-webhook-config-file=/app/conf/audit-api-client-config.yaml;
 {{- else -}}
               /app/bin/tke-auth-api -C=/app/conf/tke-auth-api.toml --init-client-secret=$(OIDC_CLIENT_SECRET);
@@ -61,7 +61,7 @@ spec:
             - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: tke-auth-cluster-certs
+                  name: tke-auth-cluster-secrets
                   key: oidc-client-secret
                   optional: false
           volumeMounts:
@@ -142,7 +142,7 @@ spec:
                   path: webhook.key
                 optional: false
             - secret:
-                name: tke-auth-cluster-certs
+                name: tke-auth-cluster-secrets
                 items:
                 - key: token.csv
                   path: token.csv

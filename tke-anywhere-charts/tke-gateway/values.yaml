@@ -8,6 +8,15 @@ podAnnotations:
 podLabels:
   app: tke-gateway
 affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      - matchExpressions:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
 image:
   repository: tdccimages/tke-gateway-amd64
   tag: industry-cloud-1.9
@@ -31,7 +40,7 @@ serverCrt:
 # 第三方certKey，在selfSigned为false时需要填值
 serverKey:
 enableAuth: true
-enableBusiness: 
+enableBusiness: false
 enableMonitor: true
 enableNotify: true
 enableRegistry: true
@@ -44,6 +53,10 @@ certificate:
   serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
   dnsNames:
+    - tke-gateway
+    - tke.anywhere
+    - registry.tke.com
+    - "*.registry.tke.com"
   uris: 
   ipAddresses:
 kubectl:

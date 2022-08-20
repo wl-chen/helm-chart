@@ -30,7 +30,7 @@ data:
     [authentication]
     token_auth_file = "/app/certs/token.csv"
     client_ca_file = "/app/certs/ca.crt"
-    privileged_username = "{{ .Values.api.adminUsername }}"
+    privileged_username = "{{ .Values.adminUsername }}"
 
       [authentication.requestheader]
       client_ca_file = "/app/certs/front-proxy-ca.crt"
@@ -42,13 +42,19 @@ data:
     assets_path = "/app/web/auth"
     init_client_id = "{{ .Values.api.tenantID }}"
     init_client_redirect_uris = [
+        "http://tke-gateway/callback",
+        "https://tke-gateway/callback",
+        "http://registry.tke.com/callback",
+        "https://registry.tke.com/callback",
+        "http://tke.anywhere/callback",
+        "https://tke.anywhere/callback",
 {{- range $element := .Values.api.redirectHosts}}
   {{ printf `      "http://%s/callback",` $element}}
   {{ printf `      "https://%s/callback",` $element}}
 {{- end}}
     ]
 
-{{- if .Values.api.enableAudit }}
+{{- if .Values.enableAudit }}
   audit-policy.yaml: |
     apiVersion: audit.k8s.io/v1
     kind: Policy

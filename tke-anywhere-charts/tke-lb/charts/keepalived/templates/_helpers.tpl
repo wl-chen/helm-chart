@@ -2,8 +2,8 @@
 Create the vrid of the keepalived config
 */}}
 {{- define "generate.vrid" -}}
-  {{- if .Values.ip}}
-    {{- $split := splitList "." .Values.ip -}}
+  {{- if .Values.vip -}}
+    {{- $split := splitList "." .Values.vip -}}
     {{- $num := index $split 3 -}}
     {{- $vrid := add $num 1 -}}
     {{- if and (lt 0 $vrid) (lt $vrid 256) -}}

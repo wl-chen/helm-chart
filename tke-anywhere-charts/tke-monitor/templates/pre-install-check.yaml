@@ -10,6 +10,7 @@ metadata:
   labels:
     app: tke-monitor-pre-install-check
 spec:
+  ttlSecondsAfterFinished: 5
   template:
     metadata:
       labels:

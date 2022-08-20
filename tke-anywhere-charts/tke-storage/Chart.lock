@@ -3,7 +3,7 @@ dependencies:
   repository: https://ceph.github.io/csi-charts
   version: 3.6.0
 - name: nfs-subdir-external-provisioner
-  repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+  repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
   version: 4.0.16
-digest: sha256:85b54a9845381bad5278c06e5a4918b45fb83a527f6788762a551b16aa53bc1a
-generated: "2022-08-16T15:24:38.934976444+08:00"
+digest: sha256:2336e633f71d1fd6dc19aa69f459de8f2fff5865c67e3cc995628c3b8aae1b1e
+generated: "2022-08-16T16:17:26.174619993+08:00"

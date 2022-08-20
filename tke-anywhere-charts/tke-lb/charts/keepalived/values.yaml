@@ -23,3 +23,9 @@ image:
   imagePullPolicy: IfNotPresent
 vip: 127.0.0.1
 interface: eth0
+
+kubectl:
+  image:
+    repository: tdccimages/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent

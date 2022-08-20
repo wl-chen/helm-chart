@@ -62,7 +62,7 @@ spec:
               mountPath: /app/certs/cert-manager
             - name: cluster-certs
               mountPath: /app/certs/cluster
-            - name: certs-volume
+            - name: certs
               mountPath: /app/certs
             - name: tke-monitor-api-volume
               mountPath: /app/conf

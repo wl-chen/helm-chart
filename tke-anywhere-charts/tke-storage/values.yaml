@@ -3,7 +3,7 @@ global:
   enableCephFS: false
   
 nfs-subdir-external-provisioner:
-  replicaCount: 1
+  replicaCount: 3
   strategyType: Recreate
 
   image:
@@ -33,7 +33,7 @@ nfs-subdir-external-provisioner:
 
     # Set a StorageClass name
     # Ignored if storageClass.create is false
-    name: nfs-client
+    name: anywhere-sc
 
     # Allow volume to be expanded dynamically
     allowVolumeExpansion: true
@@ -54,7 +54,7 @@ nfs-subdir-external-provisioner:
     pathPattern:
 
     # Set access mode - ReadWriteOnce, ReadOnlyMany or ReadWriteMany
-    accessModes: ReadWriteOnce
+    accessModes: ReadWriteMany 
 
     # Storage class annotations
     annotations: {}
@@ -104,7 +104,13 @@ nfs-subdir-external-provisioner:
 
   nodeSelector: {}
 
-  tolerations: []
+  tolerations: 
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: "NoSchedule"
 
   affinity: {}
 
@@ -206,7 +212,13 @@ ceph-csi-cephfs:
 
     nodeSelector: {}
 
-    tolerations: []
+    tolerations: 
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: "NoSchedule"
 
     affinity: {}
 
@@ -305,7 +317,13 @@ ceph-csi-cephfs:
 
     nodeSelector: {}
 
-    tolerations: []
+    tolerations: 
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: "NoSchedule"
 
     affinity: {}
 
@@ -332,8 +350,8 @@ ceph-csi-cephfs:
 
   storageClass:
     # Specifies whether the Storage class should be created
-    create: false
-    name: csi-cephfs-sc
+    create: true
+    name: anywhere-sc
     # Annotations for the storage class
     # Example:
     # annotations:
@@ -366,7 +384,7 @@ ceph-csi-cephfs:
     # If omitted, default volume mounter will be used - this is
     # determined by probing for ceph-fuse and mount.ceph
     # mounter: kernel
-    mounter: ""
+    mounter: fuse
     # (optional) Prefix to use for naming subvolumes.
     # If omitted, defaults to "csi-vol-".
     # volumeNamePrefix: "foo-bar-"
@@ -390,7 +408,7 @@ ceph-csi-cephfs:
 
   secret:
     # Specifies whether the secret should be created
-    create: false
+    create: true
     name: csi-cephfs-secret
     # Key values correspond to a user name and its key, as defined in the
     # ceph cluster. User ID should have required access to the 'pool'

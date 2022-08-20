@@ -26,8 +26,10 @@ image:
   tag: 1.7.9
   imagePullPolicy: IfNotPresent
 
-baremetalStorage: true
 nodeName: 127.0.0.1
-persistentStorage: false
-pvcName: nfs-pvc
-storageClassName: nfs-client
+persistence:
+  enabled: false
+  accessMode: ReadWriteMany
+  size: 40Gi
+  storageClassName: anywhere-sc
+  pvcName: influxdb-pvc

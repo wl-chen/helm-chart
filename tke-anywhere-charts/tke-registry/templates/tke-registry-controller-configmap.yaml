@@ -8,7 +8,7 @@ data:
     registry_config = "/app/conf/registry-config.yaml"
 
     [registry_setting]
-    default_system_chartgroups = "{{ .Values.controller.defaultChartGroups }}"
+    default_system_chartgroups = "{{ .Values.defaultChartGroups }}"
 
     [secure_serving]
     tls_cert_file = "/app/certs/server.crt"
@@ -20,13 +20,13 @@ data:
       api_server = "https://tke-registry-api"
       api_server_client_config = "/app/conf/tke-registry-config.yaml"
 
-{{- if .Values.controller.enableBusiness }}
+{{- if .Values.enableBusiness }}
       [client.business]
       api_server = "https://tke-business-api"
       api_server_client_config = "/app/conf/tke-business-config.yaml"
 {{- end }}
 
-{{- if .Values.controller.enableAuth }}
+{{- if .Values.enableAuth }}
       [client.auth]
       api_server = "https://tke-auth-api"
       api_server_client_config = "/app/conf/tke-auth-config.yaml"
@@ -43,11 +43,11 @@ data:
         endpoints:
         - "{{ .Values.etcd.host }}"
         prefix: "/chart_backend_bucket"
-{{- if .Values.filesystemEnabled }}
+{{- if eq .Values.storage "filesystem" }}
       fileSystem:
         rootDirectory: /storage
 {{- end }}
-{{- if .Values.s3Enabled }}
+{{- if eq .Values.storage "s3" }}
       s3:
 {{- with .Values.s3 }}
 {{ toYaml . | indent 8 }}
@@ -56,13 +56,13 @@ data:
       delete:
         enabled: true
     security:
-      tokenPrivateKeyFile: /etc/registry/private_key.pem
-      tokenPublicKeyFile: /etc/registry/public_key.crt
-      adminPassword: "{{ .Values.controller.adminPassword }}"
-      adminUsername: "{{ .Values.controller.adminUsername }}"
-      httpSecret: "{{ .Values.controller.adminPassword }}"
+      tokenPrivateKeyFile: /app/certs/server.key
+      tokenPublicKeyFile: /app/certs/server.crt
+      adminPassword: "{{ .Values.adminPassword | b64dec }}"
+      adminUsername: "{{ .Values.adminUsername }}"
+      httpSecret: "{{ .Values.adminPassword | b64dec }}"
     defaultTenant: default
-    domainSuffix: "{{ .Values.controller.domainSuffix }}"
+    domainSuffix: "{{ .Values.domainSuffix }}"
 
   tke-registry-config.yaml: |
     apiVersion: v1
@@ -84,7 +84,7 @@ data:
           user: admin-cert
         name: tke
 
-{{- if .Values.controller.enableBusiness }}
+{{- if .Values.enableBusiness }}
   tke-business-config.yaml: |
     apiVersion: v1
     kind: Config
@@ -106,7 +106,7 @@ data:
         name: tke
 {{- end }}
 
-{{- if .Values.controller.enableAuth }}
+{{- if .Values.enableAuth }}
   tke-auth-config.yaml: |
     apiVersion: v1
     kind: Config

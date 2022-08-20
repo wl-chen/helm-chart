@@ -1,6 +1,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
+  labels:
 {{ toYaml .Values.labels | indent 4 }}
   name: influxdb
   namespace: {{ .Release.Namespace | quote }}
@@ -49,18 +50,17 @@ spec:
         - name: data
           mountPath: /var/lib/influxdb
           subPath:
-{{- if .Values.baremetalStorage }}
+{{- if .Values.persistence.enabled }}
       nodeName: {{ .Values.nodeName }}
 {{- end }}
       hostNetwork: true
       volumes:
       - name: data
-{{- if .Values.baremetalStorage }}
+{{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ .Values.persistence.pvcName }}
+{{- else }}
         hostPath:
           path: /var/lib/influxdb
           type: DirectoryOrCreate
-{{- end }}
-{{- if .Values.persistentStorage }}
-        persistentVolumeClaim:
-          claimName: {{ .Values.pvcName }}
 {{- end }}

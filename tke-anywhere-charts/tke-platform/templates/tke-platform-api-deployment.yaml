@@ -150,7 +150,7 @@ spec:
                   path: webhook.key
                 optional: false
             - secret:
-                name: tke-platform-cluster-certs
+                name: tke-platform-cluster-secrets
                 items:
                 - key: token.csv
                   path: token.csv

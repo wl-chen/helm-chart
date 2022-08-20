@@ -38,7 +38,7 @@ api:
   replicas: 2
   image:
     repository: tdccimages/tke-monitor-api-amd64
-    tag: v1.9.0
+    tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
     limits:
@@ -76,7 +76,7 @@ controller:
   replicas: 2
   image:
     repository: tdccimages/tke-monitor-controller-amd64
-    tag: v1.9.0
+    tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
     limits:
@@ -85,8 +85,8 @@ controller:
     requests:
       cpu: 50m
       memory: 128Mi
-  registryDomain:
-  registryNamespace:
+  registryDomain: ccr.ccs.tencentyun.com
+  registryNamespace: tdccimages
 certificate:
   serverCertDuration: 876000h
   serverCertRenewBefore: 875900h
@@ -129,8 +129,10 @@ influxdb:
     tag: 1.7.9
     imagePullPolicy: IfNotPresent
 
-  baremetalStorage: true
   nodeName: 127.0.0.1
-  persistentStorage: false
-  pvcName: nfs-pvc
-  storageClassName: nfs-client
+  persistence:
+    enabled: false
+    accessMode: ReadWriteMany
+    size: 40Gi
+    storageClassName: anywhere-sc
+    pvcName: influxdb-pvc

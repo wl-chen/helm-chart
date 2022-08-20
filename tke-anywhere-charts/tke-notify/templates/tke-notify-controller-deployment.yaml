@@ -1,0 +1,130 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+{{ toYaml .Values.controller.labels | indent 4 }}
+  name: tke-notify-controller
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.controller.annotations }}
+  annotations:
+{{ toYaml .Values.controller.annotations | indent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.controller.replicas }}
+  selector:
+{{ toYaml .Values.controller.selector | indent 4 }}
+  template:
+    metadata:
+      {{- if .Values.controller.podAnnotations }}
+      annotations:
+{{ toYaml .Values.controller.podAnnotations | indent 8 }}
+      {{- end }}
+      labels:
+{{ toYaml .Values.controller.podLabels | indent 8 }}
+    spec:
+      affinity:
+{{ toYaml .Values.controller.affinity | indent 8 }}
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: "NoSchedule"
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: "NoSchedule"
+      containers:
+        - name: tke-notify-controller
+          image: "{{ .Values.notify }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
+          command:
+            - /bin/sh
+            - -c
+            - >
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd-ca.crt;
+              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd.crt;
+              ln -s /app/certs/cluster/etcd/ca.key /app/certs/etcd.key;
+              ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
+              ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
+              ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
+              ln -s /app/certs/cert-manager/admin.crt /app/certs/admin.crt;
+              ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
+              ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
+              ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
+              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
+              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
+              /app/bin/tke-notify-controller -C=/app/conf/tke-notify-controller.toml;
+          volumeMounts:
+            - name: cert-manager-certs
+              mountPath: /app/certs/cert-manager
+            - name: tke-notify-cluster-secrets
+              mountPath: /app/certs/cluster
+            - name: certs
+              mountPath: /app/certs
+            - name: tke-notify-controller-volume
+              mountPath: /app/conf
+          ports:
+            - containerPort: 9459
+          livenessProbe:
+            httpGet:
+              port: 9459
+              path: /healthz
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            limits:
+              cpu: {{ .Values.controller.resources.limits.cpu }}
+              memory: {{ .Values.controller.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.controller.resources.requests.cpu }}
+              memory: {{ .Values.controller.resources.requests.memory }}
+      volumes:
+        - name: tke-notify-controller-volume
+          configMap:
+            name: tke-notify-controller
+        - name: certs
+          emptyDir: {}
+        - name: tke-notify-cluster-secrets
+          hostPath:
+            path: {{ .Values.certificate.mountPath }}
+            type: Directory
+        - name: cert-manager-certs
+          projected:
+            sources:
+              - secret:
+                  name: tke-ca
+                  items:
+                    - key: tls.crt
+                      path: ca.crt
+                    - key: tls.key
+                      path: ca.key
+                  optional: false
+              - secret:
+                  name: tke-notify-server-secret
+                  items:
+                    - key: tls.crt
+                      path: server.crt
+                    - key: tls.key
+                      path: server.key
+                  optional: false
+              - secret:
+                  name: tke-ca-admin
+                  items:
+                    - key: tls.crt
+                      path: admin.crt
+                    - key: tls.key
+                      path: admin.key
+                  optional: false
+              - secret:
+                  name: tke-ca-webhook
+                  items:
+                    - key: tls.crt
+                      path: webhook.crt
+                    - key: tls.key
+                      path: webhook.key
+                  optional: false
+              - secret:
+                  name: tke-notify-cluster-secrets
+                  items:
+                    - key: token.csv
+                      path: token.csv
+                  optional: false

@@ -1,0 +1,59 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: keepalived-chart-hook-check
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  chart-hook-check.sh: |
+    #!/bin/bash
+
+    function check_daemonset_install {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi 
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.numberReady}") ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    function check_daemonset_upgrade {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi 
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.updatedNumberScheduled}") ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    CHECK_TYPE=$1
+    echo $CHECK_TYPE
+    case $CHECK_TYPE in
+        keepalived-post-install-check)
+            check_daemonset_install keepalived tke
+            ;;
+        keepalived-post-upgrade-check)
+            check_daemonset_upgrade keepalived tke
+            ;;
+    esac

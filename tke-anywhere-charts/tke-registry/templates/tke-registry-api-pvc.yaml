@@ -1,15 +1,15 @@
-{{- if .Values.persistentStorage }}
+{{- if .Values.persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ .Values.pvcName }}
+  name: {{ .Values.persistence.pvcName }}
   namespace: {{ .Release.Namespace | quote }}
 spec:
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.persistence.accessMode }}
   volumeMode: Filesystem
   resources:
     requests:
-      storage: 40Gi
-  storageClassName: {{ .Values.storageClassName }}
+      storage: {{ .Values.persistence.size }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
 {{- end }}

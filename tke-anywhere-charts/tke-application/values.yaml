@@ -1,0 +1,98 @@
+# Default values for tke-application.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+registry: ccr.ccs.tencentyun.com
+api:
+  labels:
+    app: tke-application-api
+  selector:
+    matchLabels:
+      app: tke-application-api
+  podLabels:
+    app: tke-application-api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  replicas: 2
+  image:
+    repository: tdccimages/tke-application-api-amd64
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: industry-cloud-1.9
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  enableAuth: true
+  enableAudit: true 
+  # oidc client
+  OIDCClientID: default
+  # oidc issuer URL
+  OIDCIssuerURL: https://tke-auth-api/oidc
+  # use oidc auth default false
+  useOIDCCA:
+  enableRegistry: true
+  etcd:
+    host: https://etcd.kube-system:2379
+
+# registry configurations
+registryDomainSuffix: registry.tke.com
+registryAdminUsername: admin
+registryAdminPassword: admin
+
+certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
+  mountPath: /etc/kubernetes/pki
+  dnsNames:
+  uris:
+  ipAddresses:
+
+# tke-application-controller
+controller:
+  labels:
+    app: tke-application-controller
+  selector:
+    matchLabels:
+      app: tke-application-controller
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  replicas: 2
+  podLabels:
+    app: tke-application-controller
+  image:
+    repository: tdccimages/tke-application-controller-amd64
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: industry-cloud-1.9
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+kubectl:
+  image:
+    repository: tdccimages/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent

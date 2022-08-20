@@ -61,6 +61,19 @@ data:
         done
     }
 
+    function check_storage_class {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get storageclass $1 2>&1 | grep "Error" | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting persistence storage class"
+            sleep 1
+        fi
+        done
+    }
+
     CHECK_TYPE=$1
     echo $CHECK_TYPE
     case $CHECK_TYPE in
@@ -78,5 +91,8 @@ data:
             check_components_cr prometheuses
             check_deployment_upgrade tke-monitor-api tke
             check_deployment_upgrade tke-monitor-controller tke
+            ;;
+        monitor-pre-install-check-persistence-storage)
+            check_storage_class {{ .Values.influxdb.persistence.storageClassName }}
             ;;
     esac

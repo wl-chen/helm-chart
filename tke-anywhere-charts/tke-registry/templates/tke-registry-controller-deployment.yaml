@@ -53,8 +53,6 @@ spec:
               ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               /app/bin/tke-registry-controller -C=/app/conf/tke-registry-controller.toml;
           volumeMounts:
-            - name: tke-registry-controller-secret
-              mountPath: /etc/registry
             - name: certs
               mountPath: /app/certs
             - name: tke-registry-controller-volume
@@ -79,8 +77,8 @@ spec:
             requests:
               cpu: {{ .Values.controller.resources.requests.cpu }}
               memory: {{ .Values.controller.resources.requests.memory }}
-{{- if .Values.baremetalStorage }}
-      nodeName: {{ .Values.controller.nodeName }}
+{{- if not .Values.persistence.enabled }}
+      nodeName: {{ .Values.nodeName }}
 {{- end }}
       volumes:
         - name: certs
@@ -133,7 +131,3 @@ spec:
                     - key: token.csv
                       path: token.csv
                   optional: false
-        - name: tke-registry-controller-secret
-          secret:
-            secretName: tke-registry-controller
-

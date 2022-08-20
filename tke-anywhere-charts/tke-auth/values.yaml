@@ -1,4 +1,12 @@
 registry: ccr.ccs.tencentyun.com
+
+# tke集群的用户名，默认为admin
+adminUsername: admin
+# tke集群的密码，默认自动生成，base64 格式
+adminPassword: YWRtaW4=
+
+enableAudit: true
+
 api:
   labels:
     app: tke-auth-api
@@ -33,7 +41,6 @@ api:
     requests:
       cpu: 250m
       memory: 256Mi
-  enableAudit: true
   # auth的重定向访问地址，包括集群服务器ip地址（必填）、tke-gateway的域名（可选）、集群高可用的VIP地址（可选）和集群的公共可访问域名（可选）
   redirectHosts:
     - 172.18.0.2
@@ -41,8 +48,7 @@ api:
   tenantID: default
   # OIDC认证方式的secret，默认自动生成
   # oIDCClientSecret: 25EOZex3zmIj5glxvYfDBp79YIM
-  # authentication用户名，默认为admin
-  adminUsername: admin
+
 controller:
   labels:
     app: tke-auth-controller
@@ -75,10 +81,6 @@ controller:
     requests:
       cpu: 50m
       memory: 128Mi
-  # tke集群的用户名，默认为admin
-  adminUsername: admin
-  # tke集群的密码，默认自动生成
-  adminPassword: admin
 etcd:
   host: https://etcd.kube-system:2379
 certificate:
@@ -93,6 +95,10 @@ certificate:
   serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
   dnsNames:
+    - tke-gateway
+    - tke.anywhere
+    - registry.tke.com
+    - "*.registry.tke.com"
   uris: 
   ipAddresses:
 kubectl:

@@ -1,8 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: tke-auth-cluster-certs
+  name: tke-application-cluster-certs
   namespace: {{ .Release.Namespace | quote }}
 data:
   token.csv: {{ randAlphaNum 27 | nospace | b64enc }}{{ print ",admin,1,administrator" | nospace | b64enc }}
-  oidc-client-secret: {{ randAlphaNum 27 | nospace | b64enc }}

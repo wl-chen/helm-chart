@@ -61,7 +61,7 @@ spec:
             - name: OIDC_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: tke-auth-cluster-certs
+                  name: tke-auth-cluster-secrets
                   key: oidc-client-secret
                   optional: false
           volumeMounts:

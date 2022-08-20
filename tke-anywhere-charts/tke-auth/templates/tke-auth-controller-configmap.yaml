@@ -18,8 +18,8 @@ data:
     [features]
       category_path = "/app/auth/category.json"
       policy_path = "/app/auth/policy.json"
-      tenant_admin = "{{ .Values.controller.adminUsername }}"
-      tenant_admin_secret = "{{ .Values.controller.adminPassword }}"
+      tenant_admin = "{{ .Values.adminUsername }}"
+      tenant_admin_secret = "{{ .Values.adminPassword | b64dec }}"
 
   tke-auth-config.yaml: |
     apiVersion: v1

@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keepalived-post-install-check
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "3"
+    "helm.sh/hook-delete-policy": hook-succeeded, before-hook-creation
+  labels:
+    app: keepalived-post-install-check
+spec:
+  ttlSecondsAfterFinished: 5
+  template:
+    metadata:
+      labels:
+        app: keepalived-post-install-check
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: "NoSchedule"
+      containers:
+        - name: kubectl
+          image: "{{ .Values.registry }}/{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+          command: ['/app/hook/chart-hook-check.sh']
+          args:
+            - keepalived-post-install-check
+          volumeMounts:
+            - name: chart-hook-check
+              mountPath: /app/hook
+      volumes:
+        - name: chart-hook-check
+          configMap:
+            name: keepalived-chart-hook-check
+            defaultMode: 0774
+      restartPolicy: OnFailure

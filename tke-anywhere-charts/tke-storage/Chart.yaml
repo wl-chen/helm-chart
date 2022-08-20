@@ -1,6 +1,6 @@
 apiVersion: v2
 name: tke-storage
-description: A Helm chart for Kubernetes
+description: A Helm chart for tke anywhere storage provisioner
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -20,7 +20,7 @@ dependencies: # chart 必要条件列表 （可选）
   - name: nfs-subdir-external-provisioner
     version: 4.0.16
     condition: global.enableNFS
-    repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner
+    repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
 
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.

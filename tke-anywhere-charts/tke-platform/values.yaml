@@ -103,8 +103,8 @@ controller:
     requests:
       cpu: 50m
       memory: 128Mi
-  registryDomain: docker.io
-  registryNamespace: tkestack
+  registryDomain: ccr.ccs.tencentyun.com
+  registryNamespace: tdccimages
 certificate:
   serverCertDuration: 876000h
   serverCertRenewBefore: 875900h

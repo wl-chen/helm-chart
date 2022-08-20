@@ -1,0 +1,96 @@
+logagent: ccr.ccs.tencentyun.com
+
+
+enableAuth: true
+enableAudit: true
+enableRegistry: true
+
+api:
+  labels:
+    app: tke-logagent-api
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-logagent-api
+  podAnnotations:
+  podLabels:
+    app: tke-logagent-api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  replicas: 2
+  image:
+    repository: tdccimages/tke-logagent-api-amd64
+    tag: industry-cloud-1.9
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  oIDCClientID: default
+  oIDCIssuerURL: https://tke-auth-api/oidc
+  useOIDCCA:
+
+controller:
+  labels:
+    app: tke-logagent-controller
+  annotations:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tke-logagent-controller
+  podAnnotations:
+  podLabels:
+    app: tke-logagent-controller
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+  image:
+    repository: tdccimages/tke-logagent-controller-amd64
+    tag: industry-cloud-1.9
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  registryDomain: ccr.ccs.tencentyun.com
+  registryNamespace: tdccimages
+
+etcd:
+  host: https://etcd.kube-system:2379
+
+certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
+  mountPath: /etc/kubernetes/pki
+  dnsNames:
+  uris:
+  ipAddresses:
+
+kubectl:
+  image:
+    repository: tdccimages/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent
+
+
