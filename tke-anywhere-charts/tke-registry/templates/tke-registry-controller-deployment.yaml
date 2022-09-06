@@ -49,8 +49,6 @@ spec:
               ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
               ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
-              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
-              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               /app/bin/tke-registry-controller -C=/app/conf/tke-registry-controller.toml;
           volumeMounts:
             - name: certs
@@ -116,14 +114,6 @@ spec:
                       path: admin.crt
                     - key: tls.key
                       path: admin.key
-                  optional: false
-              - secret:
-                  name: tke-ca-webhook
-                  items:
-                    - key: tls.crt
-                      path: webhook.crt
-                    - key: tls.key
-                      path: webhook.key
                   optional: false
               - secret:
                   name: tke-registry-cluster-secret

@@ -1,4 +1,4 @@
-kind: Deployment
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   labels:
@@ -10,7 +10,6 @@ metadata:
 {{ toYaml .Values.api.annotations | indent 4 }}
   {{- end }}
 spec:
-  replicas: {{ .Values.api.replicas }}
   selector:
 {{ toYaml .Values.api.selector | indent 4 }}
   template:
@@ -31,6 +30,28 @@ spec:
       - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: "NoSchedule"
+      initContainers:
+        - name: kubectl
+          image: "{{ .Values.registry }}/{{ .Values.kubectl.image.repository }}:{{ .Values.kubectl.image.tag }}"
+          imagePullPolicy: "{{ .Values.kubectl.image.imagePullPolicy }}"
+          command: ['/bin/sh']
+          args:
+            - "-c"
+            - |
+              /bin/bash <<'EOF'
+              #!/bin/bash
+              
+              cp /app/certs/tls.crt /etc/kubernetes/pki/webhook.crt
+              cp /app/certs/tls.key /etc/kubernetes/pki/webhook.key
+              EOF
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          volumeMounts:
+          - name: cluster-certs
+            mountPath: /etc/kubernetes/pki
+          - name: tke-ca-webhook
+            mountPath: /app/certs
       containers:
         - name: tke-auth-api
           image: "{{ .Values.registry }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
@@ -45,12 +66,8 @@ spec:
               ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
               ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
               ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
-              ln -s /app/certs/cert-manager/admin.crt /app/certs/admin.crt;
-              ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
               ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
-              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
-              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               ln -s /app/certs/cert-manager/token.csv /app/certs/token.csv;
 {{- if .Values.enableAudit }}
               /app/bin/tke-auth-api -C=/app/conf/tke-auth-api.toml --init-client-secret=$(OIDC_CLIENT_SECRET) --audit-policy-file=/app/conf/audit-policy.yaml --audit-webhook-config-file=/app/conf/audit-api-client-config.yaml;
@@ -126,25 +143,13 @@ spec:
                   path: server.key
                 optional: false
             - secret:
-                name: tke-ca-admin
-                items:
-                - key: tls.crt
-                  path: admin.crt
-                - key: tls.key
-                  path: admin.key
-                optional: false
-            - secret:
-                name: tke-ca-webhook
-                items:
-                - key: tls.crt
-                  path: webhook.crt
-                - key: tls.key
-                  path: webhook.key
-                optional: false
-            - secret:
                 name: tke-auth-cluster-secrets
                 items:
                 - key: token.csv
                   path: token.csv
                 optional: false
+        - name: tke-ca-webhook
+          secret:
+            secretName: tke-ca-webhook
+            defaultMode: 0644
                 

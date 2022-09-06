@@ -53,7 +53,6 @@ spec:
 {{- if .Values.persistence.enabled }}
       nodeName: {{ .Values.nodeName }}
 {{- end }}
-      hostNetwork: true
       volumes:
       - name: data
 {{- if .Values.persistence.enabled }}

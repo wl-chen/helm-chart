@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config: '{"NonMasqueradeCIDRs":["{{ .Values.clusterCIDR }}"],"MasqLinkLocal":true,"ResyncInterval":"1m0s"}'
+kind: ConfigMap
+metadata:
+  name: ip-masq-agent-config
+  namespace: {{ .Release.Namespace | quote }}

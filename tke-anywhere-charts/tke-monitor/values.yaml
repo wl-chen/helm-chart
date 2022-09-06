@@ -35,9 +35,20 @@ api:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-monitor-api
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   image:
-    repository: tdccimages/tke-monitor-api-amd64
+    repository: tdccimages/tke-monitor-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -73,9 +84,20 @@ controller:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-monitor-controller
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   image:
-    repository: tdccimages/tke-monitor-controller-amd64
+    repository: tdccimages/tke-monitor-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -122,6 +144,17 @@ influxdb:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - influxdb
+          topologyKey: kubernetes.io/hostname
 
   replicas: 1
   image:

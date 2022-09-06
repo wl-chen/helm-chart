@@ -1,0 +1,6 @@
+registry: ccr.ccs.tencentyun.com
+
+image:
+  repository: tkeimages/tke-cni-agent
+  tag: v0.1.2
+  imagePullPolicy: IfNotPresent

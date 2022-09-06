@@ -1,9 +1,11 @@
 global:
   enabledCilium: true
-  registry: &registry ccr.ccs.tencentyun.com
+  enableIPMasqAgent: true
+  enableTKECNIAgent: true
+  enableTKEENIIpamd: true
 
 cilium:
-  registry: *registry
+  registry: ccr.ccs.tencentyun.com
   cilium:
     labels:
       k8s-app: cilium
@@ -31,7 +33,7 @@ cilium:
             topologyKey: kubernetes.io/hostname
     image:
       repository: tdccimages/cilium
-      tag: v1.9.5
+      tag: v1.10.4-tke.1
       imagePullPolicy: IfNotPresent
     resources:
       limits:
@@ -43,7 +45,7 @@ cilium:
     initContainer:
       image:
         repository: tdccimages/cilium
-        tag: v1.9.5
+        tag: v1.10.4-tke.1
         imagePullPolicy: IfNotPresent
       resources:
         limits:
@@ -77,7 +79,7 @@ cilium:
               topologyKey: kubernetes.io/hostname
       image:
         repository: tdccimages/cilium-operator-generic
-        tag: v1.9.5
+        tag: v1.10.4
         imagePullPolicy: IfNotPresent
       resources:
         limits:
@@ -86,37 +88,65 @@ cilium:
         requests:
           cpu: 100m
           memory: 128Mi
-    router:
+
+  ip-masq-agent:
+    registry: ccr.ccs.tencentyun.com
+    clusterCIDR: 192.168.0.0/16
+    masq:
       labels:
-        app: cilium-router
       annotations:
       selector:
         matchLabels:
-          app: cilium-router
+          name: ip-masq-agent
       podAnnotations:
       podLabels:
-        app: cilium-router
-        infra.tce.io/product: tcs
+        name: ip-masq-agent
+      affinity:
+      image:
+        repository: tdccimages/ip-masq-agent
+        tag: v1.0.0
+        imagePullPolicy: IfNotPresent  
+        
+  tke-cni-agent:
+    registry: ccr.ccs.tencentyun.com
+    image:
+      repository: tdccimages/tke-cni-agent
+      tag: v0.1.2
+      imagePullPolicy: IfNotPresent
+
+  tke-eni-ipamd:
+    registry: ccr.ccs.tencentyun.com
+    clusterCIDR: 192.168.0.0/16
+    serviceCIDR: 192.168.240.0/24
+    ipamd:
+      labels:
+        k8s-app: tke-eni-ipamd
+        qcloud-app: tke-eni-ipamd
+      annotations:
+      selector:
+        matchLabels:
+          k8s-app: tke-eni-ipamd
+          qcloud-app: tke-eni-ipamd
+      podAnnotations:
+      podLabels:
+        k8s-app: tke-eni-ipamd
+        qcloud-app: tke-eni-ipamd
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               - matchExpressions:
-                  - key: kubernetes.io/os
-                    operator: In
-                    values:
-                      - linux
-                  - key: node.infra.tce.io/lifecycle
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+              - matchExpressions:
+                  - key: node.kubernetes.io/instance-type
                     operator: NotIn
                     values:
-                      - maintain
-                  - key: testing.infra.tce.io/node-type
-                    operator: NotIn
-                    values:
-                      - hollow
+                      - external
+      maxNodePodNum: 64
       image:
-        repository: tdccimages/cilium-router
-        tag: v0.1.0
+        repository: tdccimages/tke-eni-ipamd
+        tag: v3.4.8
         imagePullPolicy: IfNotPresent
       resources:
         limits:
@@ -125,61 +155,3 @@ cilium:
         requests:
           cpu: 100m
           memory: 128Mi
-  ipamd:
-    labels:
-      k8s-app: tke-eni-ipamd
-      qcloud-app: tke-eni-ipamd
-    annotations:
-    selector:
-      matchLabels:
-        k8s-app: tke-eni-ipamd
-        qcloud-app: tke-eni-ipamd
-    podAnnotations:
-    podLabels:
-      k8s-app: tke-eni-ipamd
-      qcloud-app: tke-eni-ipamd
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: node-role.kubernetes.io/control-plane
-              operator: Exists
-          - matchExpressions:
-            - key: node-role.kubernetes.io/master
-              operator: Exists
-    maxNodePodNum: 256
-    image:
-      repository: tdccimages/tke-eni-ipamd
-      tag: v3.3.3
-      imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
-  masq:
-    labels:
-    annotations:
-    selector:
-      matchLabels:
-        name: ip-masq-agent
-    podAnnotations:
-    podLabels:
-      name: ip-masq-agent
-    affinity:
-    image:
-      repository: tdccimages/ip-masq-agent
-      tag: v1.0.0
-      imagePullPolicy: IfNotPresent
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
-  clusterCIDR: 192.168.0.0/16
-  networkMode: overlay

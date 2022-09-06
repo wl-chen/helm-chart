@@ -14,6 +14,9 @@ spec:
         - tke-gateway
         - gateway
         - tke-gateway.tke.svc
+        - tke.anywhere
+        - registry.tke.com
+        - "*.registry.tke.com"
 {{ if .Values.certificate.dnsNames }}
 {{ toYaml .Values.certificate.dnsNames | indent 8 }}
 {{ end }} 
@@ -47,6 +50,16 @@ spec:
                 port:
                   number: 80
     - host: "tke-gateway"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: tke-gateway
+                port:
+                  number: 80
+    - host: "tke.anywhere"
       http:
         paths:
           - pathType: Prefix

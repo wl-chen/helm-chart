@@ -19,6 +19,9 @@ spec:
     - tke-gateway
     - gateway
     - tke-gateway.tke.svc
+    - tke.anywhere
+    - registry.tke.com
+    - "*.registry.tke.com"
   {{- with .Values.certificate.dnsNames }}
   {{- toYaml . | nindent 4 }}
   {{- end }}

@@ -1,0 +1,60 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: tke-cni-agent
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    k8s-app: tke-cni-agent
+spec:
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: "10%"
+  selector:
+    matchLabels:
+      k8s-app: tke-cni-agent
+  template:
+    metadata:
+      labels:
+        k8s-app: tke-cni-agent
+    spec:
+      serviceAccountName: "tke-cni"
+      hostNetwork: true
+      terminationGracePeriodSeconds: 0
+      tolerations:
+        - operator: Exists
+      containers:
+        - image: "{{ .Values.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+          name: tke-cni-agent
+          volumeMounts:
+            - mountPath: /host/opt/cni/bin
+              name: cni-bin-dir
+            - mountPath: /host/etc/cni/net.d
+              name: cni-net-dir
+            - mountPath: /host/etc/kubernetes/
+              name: kube-conf-dir
+            - mountPath: /etc/tke-cni-agent-conf
+              name: tke-cni-agent-conf
+          env:
+            - name: K8S_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.nodeName
+            - name: KUBECONFIG
+              value: "/host/etc/kubernetes/tke-cni-kubeconfig"
+      volumes:
+        - name: cni-bin-dir
+          hostPath:
+            path: /opt/cni/bin
+        - name: cni-net-dir
+          hostPath:
+            path: /etc/cni/net.d
+        - name: kube-conf-dir
+          hostPath:
+            path: /etc/kubernetes
+        - configMap:
+            defaultMode: 420
+            name: tke-cni-agent-conf
+          name: tke-cni-agent-conf

@@ -1,0 +1,19 @@
+apiVersion: v1
+data:
+  00-multus.conf: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "multus-cni",
+      "type": "multus",
+      "kubeconfig": "/etc/kubernetes/tke-cni-kubeconfig",
+      "logLevel": "info",
+      "defaultDelegates": "cilium",
+      "capabilities": {
+        "bandwidth": true,
+        "portMappings": true
+      }
+    }
+kind: ConfigMap
+metadata:
+  name: tke-cni-agent-conf
+  namespace: {{ .Release.Namespace | quote }}

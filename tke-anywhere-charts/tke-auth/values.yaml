@@ -27,11 +27,19 @@ api:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - tke-auth-api
+        topologyKey: "kubernetes.io/hostname"
   # tke-auth-api组件在node上的对外暴露端口，默认31138
   nodePort: 31138
-  replicas: 2
   image:
-    repository: tdccimages/tke-auth-api-amd64
+    repository: tdccimages/tke-auth-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -69,9 +77,20 @@ controller:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-auth-controller
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   image:
-    repository: tdccimages/tke-auth-controller-amd64
+    repository: tdccimages/tke-auth-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -95,10 +114,6 @@ certificate:
   serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
   dnsNames:
-    - tke-gateway
-    - tke.anywhere
-    - registry.tke.com
-    - "*.registry.tke.com"
   uris: 
   ipAddresses:
 kubectl:

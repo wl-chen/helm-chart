@@ -24,9 +24,20 @@ api:
           - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-notify-api
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   image:
-    repository: tdccimages/tke-notify-api-amd64
+    repository: tdccimages/tke-notify-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -61,8 +72,19 @@ controller:
           - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-notify-controller
+          topologyKey: kubernetes.io/hostname
   image:
-    repository: tdccimages/tke-notify-controller-amd64
+    repository: tdccimages/tke-notify-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -89,17 +111,3 @@ kubectl:
     repository: tdccimages/kubectl
     tag: 1.22.7
     imagePullPolicy: IfNotPresent
-
-
-
-
-
-
-
-
-
-
-
-
-
-

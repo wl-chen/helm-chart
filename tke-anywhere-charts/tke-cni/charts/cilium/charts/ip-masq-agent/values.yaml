@@ -1,0 +1,17 @@
+registry: ccr.ccs.tencentyun.com
+clusterCIDR: 192.168.0.0/16
+
+masq:
+  labels:
+  annotations:
+  selector:
+    matchLabels:
+      name: ip-masq-agent
+  podAnnotations:
+  podLabels:
+    name: ip-masq-agent
+  affinity:
+  image:
+    repository: tkestack/ip-masq-agent
+    tag: v1.0.0
+    imagePullPolicy: IfNotPresent

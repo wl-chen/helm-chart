@@ -20,7 +20,7 @@ data:
             check=true
             echo "waiting $1"
             sleep 1
-        fi 
+        fi
         if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.readyReplicas}") ]; then
             check=true
             echo "waiting $1"
@@ -38,14 +38,31 @@ data:
             check=true
             echo "waiting $1"
             sleep 1
-        fi 
+        fi
         if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.updatedReplicas}") ]; then
             check=true
             echo "waiting $1"
             sleep 1
         fi
         done
-        
+    }
+
+    function check_daemonset_install {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.numberReady}") ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
     }
 
     function check_components_cr {
@@ -79,7 +96,7 @@ data:
     case $CHECK_TYPE in
         registry-pre-install-check)
             check_components_cr client
-            check_deployment_install tke-auth-api tke
+            check_daemonset_install tke-auth-api tke
             check_deployment_install tke-auth-controller tke
             ;;
         registry-post-install-check)

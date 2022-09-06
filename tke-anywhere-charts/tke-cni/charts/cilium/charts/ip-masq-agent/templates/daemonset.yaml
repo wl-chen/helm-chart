@@ -1,13 +1,3 @@
-{{ if eq .Values.networkMode "underlay" }}
----
-apiVersion: v1
-data:
-  config: '{"NonMasqueradeCIDRs":["{{ .Values.clusterCIDR }}"],"MasqLinkLocal":true,"ResyncInterval":"1m0s"}'
-kind: ConfigMap
-metadata:
-  name: ip-masq-agent-config
-  namespace: {{ .Release.Namespace | quote }}
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -41,13 +31,7 @@ spec:
         - image: "{{ .Values.registry }}/{{ .Values.masq.image.repository }}:{{ .Values.masq.image.tag }}"
           imagePullPolicy: "{{ .Values.masq.image.imagePullPolicy }}"
           name: ip-masq-agent
-          resources:
-            limits:
-              cpu: {{ .Values.masq.resources.limits.cpu }}
-              memory: {{ .Values.masq.resources.limits.memory }}
-            requests:
-              cpu: {{ .Values.masq.resources.requests.cpu }}
-              memory: {{ .Values.masq.resources.requests.memory }}
+          resources: {}
           securityContext:
             privileged: true
           terminationMessagePath: /dev/termination-log
@@ -76,4 +60,3 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
     type: RollingUpdate
-{{ end }}

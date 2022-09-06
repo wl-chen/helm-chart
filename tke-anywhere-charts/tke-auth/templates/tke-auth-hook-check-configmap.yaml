@@ -8,8 +8,37 @@ metadata:
     "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": before-hook-creation
 data:
+  test-issuer.yaml: |
+    # ca issuer
+    apiVersion: cert-manager.io/v1
+    kind: Issuer
+    metadata:
+      name: test-issuer
+      namespace: {{ .Release.Namespace | quote }}
+    spec:
+      ca: 
+        secretName: test-tke-ca
   chart-hook-check.sh: |
     #!/bin/bash
+
+    function check_cert_manager_webhook_ready {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl apply -f /app/hook/test-issuer.yaml 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting cert manager webhook ready"
+            sleep 1
+        fi
+        if [ $check = false ] && [ $(kubectl apply -f /app/hook/test-issuer.yaml 2>&1 | grep error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting cert manager webhook ready"
+            sleep 1
+        fi
+        done
+        kubectl delete -f /app/hook/test-issuer.yaml
+    }
 
     function check_deployment_install {
         check=true
@@ -20,7 +49,7 @@ data:
             check=true
             echo "waiting $1"
             sleep 1
-        fi 
+        fi
         if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.readyReplicas}") ]; then
             check=true
             echo "waiting $1"
@@ -38,14 +67,14 @@ data:
             check=true
             echo "waiting $1"
             sleep 1
-        fi 
+        fi
         if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.updatedReplicas}") ]; then
             check=true
             echo "waiting $1"
             sleep 1
         fi
         done
-        
+
     }
 
     function check_daemonset_install {
@@ -57,8 +86,26 @@ data:
             check=true
             echo "waiting $1"
             sleep 1
-        fi 
+        fi
         if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.numberReady}") ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    function check_daemonset_upgrade {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 2>&1 | grep Error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.updatedNumberScheduled}") ]; then
             check=true
             echo "waiting $1"
             sleep 1
@@ -84,16 +131,21 @@ data:
     case $CHECK_TYPE in
         auth-pre-install-check)
             check_components_cr certificate
+            check_components_cr issuer
+            check_deployment_install cert-manager cert-manager
+            check_deployment_install cert-manager-cainjector cert-manager
+            check_deployment_install cert-manager-webhook cert-manager
             check_daemonset_install ingress-nginx-controller tke
+            check_cert_manager_webhook_ready
             ;;
         auth-post-install-check)
             check_components_cr client
-            check_deployment_install tke-auth-api tke
+            check_daemonset_install tke-auth-api tke
             check_deployment_install tke-auth-controller tke
             ;;
         auth-post-upgrade-check)
             check_components_cr client
-            check_deployment_upgrade tke-auth-api tke
+            check_daemonset_upgrade tke-auth-api tke
             check_deployment_upgrade tke-auth-controller tke
             ;;
     esac

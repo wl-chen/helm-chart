@@ -46,9 +46,20 @@ api:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-platform-api
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   image:
-    repository: tdccimages/tke-platform-api-amd64
+    repository: tdccimages/tke-platform-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -86,14 +97,25 @@ controller:
         - matchExpressions:
           - key: node-role.kubernetes.io/master
             operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-platform-controller
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   providerRes:
     image: 
-      repository: tdccimages/provider-res-amd64
+      repository: tdccimages/provider-res
       tag: v1.21.4-3
       imagePullPolicy: IfNotPresent
   image:
-    repository: tdccimages/tke-platform-controller-amd64
+    repository: tdccimages/tke-platform-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:

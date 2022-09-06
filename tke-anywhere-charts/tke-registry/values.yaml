@@ -33,10 +33,21 @@ api:
           - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-registry-api
+          topologyKey: kubernetes.io/hostname
   harborCAFile: false
   harborEnabled: false
   image:
-    repository: tdccimages/tke-registry-api-amd64
+    repository: tdccimages/tke-registry-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   oIDCIssuerURL: https://tke-auth-api/oidc
@@ -83,7 +94,7 @@ controller:
                     - tke-registry-controller
             topologyKey: kubernetes.io/hostname
   image:
-    repository: tdccimages/tke-registry-controller-amd64
+    repository: tdccimages/tke-registry-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
   resources:
@@ -164,7 +175,8 @@ docker-registry:
   #   maxUnavailable: 0
 
   podAnnotations: {}
-  podLabels: {}
+  podLabels: 
+    app: docker-registry
 
   serviceAccount:
     create: false
@@ -173,7 +185,7 @@ docker-registry:
 
   image:
     repository: ccr.ccs.tencentyun.com/tdccimages/registry
-    tag: 2.7.1
+    tag: 2.7.1-anywhere.1
     pullPolicy: IfNotPresent
     # imagePullSecrets:
     # - name: docker
@@ -359,6 +371,17 @@ docker-registry:
           - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - docker-registry
+          topologyKey: kubernetes.io/hostname
 
   tolerations:
     - key: node-role.kubernetes.io/master
@@ -388,6 +411,3 @@ docker-registry:
   ## Additional ENV variables to set
   # - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
   #   value: "/var/lib/example"
-
-
-

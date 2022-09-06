@@ -20,9 +20,20 @@ api:
           - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-application-api
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   image:
-    repository: tdccimages/tke-application-api-amd64
+    repository: tdccimages/tke-application-api
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: industry-cloud-1.9
@@ -48,7 +59,7 @@ api:
 # registry configurations
 registryDomainSuffix: registry.tke.com
 registryAdminUsername: admin
-registryAdminPassword: admin
+registryAdminPassword: YWRtaW4=
 
 certificate:
   serverCertDuration: 876000h
@@ -75,11 +86,22 @@ controller:
           - matchExpressions:
               - key: node-role.kubernetes.io/master
                 operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-application-controller
+          topologyKey: kubernetes.io/hostname
   replicas: 2
   podLabels:
     app: tke-application-controller
   image:
-    repository: tdccimages/tke-application-controller-amd64
+    repository: tdccimages/tke-application-controller
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
     tag: industry-cloud-1.9

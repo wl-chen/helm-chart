@@ -1,0 +1,41 @@
+registry: ccr.ccs.tencentyun.com
+clusterCIDR: 192.168.0.0/16
+serviceCIDR: 192.168.240.0/24
+
+ipamd:
+  labels:
+    k8s-app: tke-eni-ipamd
+    qcloud-app: tke-eni-ipamd
+  annotations:
+  selector:
+    matchLabels:
+      k8s-app: tke-eni-ipamd
+      qcloud-app: tke-eni-ipamd
+  podAnnotations:
+  podLabels:
+    k8s-app: tke-eni-ipamd
+    qcloud-app: tke-eni-ipamd
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: NotIn
+                values:
+                  - external
+  maxNodePodNum: 64
+  image:
+    repository: tkestack/tke-eni-ipamd
+    tag: v3.4.8
+    imagePullPolicy: IfNotPresent
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi

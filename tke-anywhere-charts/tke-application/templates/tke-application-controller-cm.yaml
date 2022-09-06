@@ -24,7 +24,7 @@ data:
         scheme = "https"
         domain_suffix = "{{ .Values.registryDomainSuffix }}"
         admin = "{{ .Values.registryAdminUsername }}"
-        admin_password = "{{ .Values.registryAdminPassword }}"
+        admin_password = "{{ .Values.registryAdminPassword | b64dec }}"
         cafile = "/app/certs/ca.crt"
 
   tke-platform-config.yaml: |

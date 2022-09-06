@@ -10,7 +10,6 @@ metadata:
   labels:
     app: tke-application-post-install-check
 spec:
-  ttlSecondsAfterFinished: 5
   template:
     metadata:
       labels:
@@ -18,6 +17,9 @@ spec:
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: "NoSchedule"
+      - key: node-role.kubernetes.io/control-plane
         operator: Exists
         effect: "NoSchedule"
       containers:
@@ -36,3 +38,4 @@ spec:
             name: tke-application-chart-hook-check
             defaultMode: 0774
       restartPolicy: OnFailure
+  ttlSecondsAfterFinished: 5 

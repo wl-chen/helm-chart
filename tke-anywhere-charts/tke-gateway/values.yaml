@@ -18,7 +18,7 @@ affinity:
         - key: node-role.kubernetes.io/master
           operator: Exists
 image:
-  repository: tdccimages/tke-gateway-amd64
+  repository: tdccimages/tke-gateway
   tag: industry-cloud-1.9
   imagePullPolicy: IfNotPresent
 resources:

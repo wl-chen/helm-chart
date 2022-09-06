@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       labels:
-        app: tke-platform-pre-install-check
+        app: platform-pre-install-check
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master

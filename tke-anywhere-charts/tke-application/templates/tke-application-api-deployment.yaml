@@ -41,8 +41,6 @@ spec:
               ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
               ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
-              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
-              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               ln -s /app/certs/cert-manager/token.csv /app/certs/token.csv;
 {{- if .Values.api.enableAudit }}
               /app/bin/tke-application-api -C=/app/conf/tke-application-api.toml --audit-policy-file=/app/conf/audit-policy.yaml --audit-webhook-config-file=/app/conf/audit-api-client-config.yaml;
@@ -114,15 +112,7 @@ spec:
                   path: admin.key
                 optional: false
             - secret:
-                name: tke-ca-webhook
-                items:
-                - key: tls.crt
-                  path: webhook.crt
-                - key: tls.key
-                  path: webhook.key
-                optional: false
-            - secret:
-                name: tke-application-cluster-certs
+                name: tke-application-cluster-secrets
                 items:
                 - key: token.csv
                   path: token.csv

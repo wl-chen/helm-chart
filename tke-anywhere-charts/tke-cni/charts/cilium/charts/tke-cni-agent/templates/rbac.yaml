@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tke-cni
+  namespace: {{ .Release.Namespace | quote }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tke-cni-clusterrole
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - pods/status
+      - nodes
+      - nodes/status
+    verbs:
+      - get
+      - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tke-cni-clusterrole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: tke-cni-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: tke-cni
+    namespace: {{ .Release.Namespace | quote }}

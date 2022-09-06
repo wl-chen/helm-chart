@@ -39,24 +39,16 @@ spec:
             - /bin/sh
             - -c 
             - >
-              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd-ca.crt;
-              ln -s /app/certs/cluster/etcd/ca.crt /app/certs/etcd.crt;
-              ln -s /app/certs/cluster/etcd/ca.key /app/certs/etcd.key;
-              ln -s /app/certs/cluster/front-proxy-ca.crt /app/certs/front-proxy-ca.crt;
               ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
               ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
               ln -s /app/certs/cert-manager/admin.crt /app/certs/admin.crt;
               ln -s /app/certs/cert-manager/admin.key /app/certs/admin.key;
               ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
               ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
-              ln -s /app/certs/cert-manager/webhook.crt /app/certs/webhook.crt;
-              ln -s /app/certs/cert-manager/webhook.key /app/certs/webhook.key;
               /app/bin/tke-monitor-controller -C=/app/conf/tke-monitor-controller.toml;
           volumeMounts:
             - name: cert-manager-certs
               mountPath: /app/certs/cert-manager
-            - name: cluster-certs
-              mountPath: /app/certs/cluster
             - name: certs
               mountPath: /app/certs
             - name: tke-monitor-controller-volume
@@ -80,10 +72,6 @@ spec:
       volumes:
         - name: certs
           emptyDir: {}
-        - name: cluster-certs
-          hostPath:
-            path: {{ .Values.certificate.mountPath }}
-            type: Directory
         - name: cert-manager-certs
           projected:
             sources:
@@ -110,14 +98,6 @@ spec:
                   path: admin.crt
                 - key: tls.key
                   path: admin.key
-                optional: false
-            - secret:
-                name: tke-ca-webhook
-                items:
-                - key: tls.crt
-                  path: webhook.crt
-                - key: tls.key
-                  path: webhook.key
                 optional: false
         - name: tke-monitor-controller-volume
           configMap:
