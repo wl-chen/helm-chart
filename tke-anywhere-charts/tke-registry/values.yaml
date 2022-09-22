@@ -128,9 +128,8 @@ kubectl:
 
 # set the type of filesystem to use: filesystem, s3
 storage: filesystem
-nodeName: 127.0.0.1
 persistence:
-  enabled: false
+  enabled: true
   accessMode: ReadWriteMany
   size: 40Gi
   storageClassName: anywhere-sc
@@ -236,7 +235,7 @@ docker-registry:
   #  memory: 128Mi
   persistence:
     accessMode: 'ReadWriteMany'
-    enabled: false
+    enabled: true
     size: 40Gi
     storageClass: anywhere-sc
 

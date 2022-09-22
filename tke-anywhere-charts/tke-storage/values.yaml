@@ -1,6 +1,73 @@
 global:
   enableNFS: false
   enableCephFS: false
+  enableHostpathProvisioner: true
+
+hostpath-provisioner:
+  strategyType: Recreate
+
+  image:
+    repository: ccr.ccs.tencentyun.com/tdccimages/hostpath-provisioner
+    # Note that by default we use appVersion to get image tag
+    # tag:
+    pullPolicy: IfNotPresent
+
+  ## For creating the StorageClass automatically:
+  storageClass:
+    create: true
+
+    ## Set StorageClass as the default StorageClass
+    ## Ignored if storageClass.create is false
+    defaultClass: true
+
+    ## Set a StorageClass name
+    name: anywhere-sc
+
+  ## Set the provisioner name
+  provisionerName: hostpath
+
+  ## Set the reclaimPolicy
+  reclaimPolicy: Retain
+
+  ## Set the local HostPath to be used on the node
+  nodeHostPath: /var/lib/tke-anywhere
+
+  ## Node selector
+  nodeSelector: {}
+
+  ## Affinity
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+
+  ## Tolerations
+  tolerations: 
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: "NoSchedule"
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: "NoSchedule"
+
+  rbac:
+    create: true
+    ## Ignored if rbac.create is true
+    serviceAccountName: default
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
   
 nfs-subdir-external-provisioner:
   replicaCount: 3
@@ -112,7 +179,16 @@ nfs-subdir-external-provisioner:
       operator: Exists
       effect: "NoSchedule"
 
-  affinity: {}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: Exists
+          - matchExpressions:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
 
   # Additional labels for any resource created
   labels: {}
@@ -220,7 +296,16 @@ ceph-csi-cephfs:
         operator: Exists
         effect: "NoSchedule"
 
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+            - matchExpressions:
+                - key: node-role.kubernetes.io/master
+                  operator: Exists
 
     # Set to true to enable Ceph Kernel clients
     # on kernel < 4.17 which support quotas
@@ -325,7 +410,16 @@ ceph-csi-cephfs:
         operator: Exists
         effect: "NoSchedule"
 
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: Exists
+            - matchExpressions:
+                - key: node-role.kubernetes.io/master
+                  operator: Exists
 
     # If true, create & use Pod Security Policy resources
     # https://kubernetes.io/docs/concepts/policy/pod-security-policy/

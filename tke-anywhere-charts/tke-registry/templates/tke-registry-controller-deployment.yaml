@@ -75,9 +75,6 @@ spec:
             requests:
               cpu: {{ .Values.controller.resources.requests.cpu }}
               memory: {{ .Values.controller.resources.requests.memory }}
-{{- if not .Values.persistence.enabled }}
-      nodeName: {{ .Values.nodeName }}
-{{- end }}
       volumes:
         - name: certs
           emptyDir: {}

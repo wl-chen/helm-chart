@@ -91,9 +91,6 @@ spec:
             requests:
               cpu: {{ .Values.api.resources.requests.cpu }}
               memory: {{ .Values.api.resources.requests.memory }}
-{{- if not .Values.persistence.enabled }}
-      nodeName: {{ .Values.nodeName }}
-{{- end }}
       volumes:
         - name: tke-registry-api-volume
           configMap:
@@ -139,12 +136,6 @@ spec:
                   optional: false
 {{- if eq .Values.storage "filesystem" }}
         - name: registry-data
-  {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ .Values.persistence.pvcName }}
-  {{- else }}
-          hostPath:
-            path: /var/lib/tke-registry-api
-            type: DirectoryOrCreate
-  {{- end }}
 {{- end }}

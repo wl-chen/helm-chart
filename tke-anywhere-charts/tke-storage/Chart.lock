@@ -5,5 +5,8 @@ dependencies:
 - name: nfs-subdir-external-provisioner
   repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
   version: 4.0.16
-digest: sha256:2336e633f71d1fd6dc19aa69f459de8f2fff5865c67e3cc995628c3b8aae1b1e
-generated: "2022-08-16T16:17:26.174619993+08:00"
+- name: hostpath-provisioner
+  repository: https://charts.rimusz.net
+  version: 0.2.13
+digest: sha256:ef97fba8b245a34bcb32c8a94106b39089ed1b05f369843fcc3ff8dc0f4c9778
+generated: "2022-09-21T20:32:56.259889646+08:00"

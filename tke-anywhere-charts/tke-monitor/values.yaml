@@ -162,9 +162,7 @@ influxdb:
     tag: 1.7.9
     imagePullPolicy: IfNotPresent
 
-  nodeName: 127.0.0.1
   persistence:
-    enabled: false
     accessMode: ReadWriteMany
     size: 40Gi
     storageClassName: anywhere-sc
