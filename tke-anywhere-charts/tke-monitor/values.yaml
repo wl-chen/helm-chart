@@ -9,8 +9,8 @@ enableAuth: true
 enableAudit: true
 enableBusiness: false
 storage:
-  # influxDB, elasticsearch, thanos
-  type: influxDB
+  # influxdb, elasticsearch, thanos
+  type: influxdb
   # 默认的master[0]内网ip
   address: http://influxdb.tke.svc.cluster.local:8086
   username: ""

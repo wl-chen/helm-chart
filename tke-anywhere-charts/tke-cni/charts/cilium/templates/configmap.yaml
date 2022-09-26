@@ -137,3 +137,4 @@ data:
   #ipam: "kubernetes"
   ipam: "crd"
   disable-cnp-status-updates: "true"
+  k8s-require-ipv4-pod-cidr: "true"

@@ -101,7 +101,7 @@ data:
     apiVersion: monitor.config.tkestack.io/v1
     kind: MonitorConfiguration
     storage:
-{{- if eq .Values.storage.type "influxDB" }}
+{{- if eq .Values.storage.type "influxdb" }}
       influxDB:
         servers:
           - address: {{ .Values.storage.address }}

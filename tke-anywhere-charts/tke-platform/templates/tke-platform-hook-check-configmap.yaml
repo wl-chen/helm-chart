@@ -11,53 +11,28 @@ data:
   chart-hook-check.sh: |
     #!/bin/bash
 
-    function check_deployment_install {
+    function check_deployment {
         check=true
         while [ $check = true ]
         do
         check=false
-        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 2>&1 | grep Error | wc -l) -gt 0 ]; then
-            check=true
-            echo "waiting $1"
-            sleep 1
-        fi
-        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.readyReplicas}") ]; then
+        result=$(kubectl get deployment $1 -n $2 --ignore-not-found -o go-template --template='{{ "{{if or (ne (.status.replicas) (.status.readyReplicas)) (ne (.status.replicas) (.status.updatedReplicas))}}false{{else}}true{{end}}" }}')
+        if [ $check = false ] && ([ -z $result ] || [ $result != true ]); then
             check=true
             echo "waiting $1"
             sleep 1
         fi
         done
+
     }
 
-    function check_deployment_upgrade {
+    function check_daemonset {
         check=true
         while [ $check = true ]
         do
         check=false
-        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 2>&1 | grep Error | wc -l) -gt 0 ]; then
-            check=true
-            echo "waiting $1"
-            sleep 1
-        fi
-        if [ $check = false ] && [ $(kubectl get deployment $1 -n $2 -o jsonpath="{.spec.replicas}") -ne $(kubectl get deployment $1 -n $2 -o jsonpath="{.status.updatedReplicas}") ]; then
-            check=true
-            echo "waiting $1"
-            sleep 1
-        fi
-        done
-    }
-
-    function check_daemonset_install {
-        check=true
-        while [ $check = true ]
-        do
-        check=false
-        if [ $check = false ] && [ $(kubectl get daemonset $1 -n tke 2>&1 | grep Error | wc -l) -gt 0 ]; then
-            check=true
-            echo "waiting $1"
-            sleep 1
-        fi
-        if [ $check = false ] && [ $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.desiredNumberScheduled}") -ne $(kubectl get daemonset $1 -n $2 -o jsonpath="{.status.numberReady}") ]; then
+        result=$(kubectl get daemonset $1 -n $2 --ignore-not-found -o go-template --template='{{ "{{if or (ne (.status.desiredNumberScheduled) (.status.numberReady)) (ne (.status.desiredNumberScheduled) (.status.updatedNumberScheduled))}}false{{else}}true{{end}}" }}')
+        if [ $check = false ] && ([ -z $result ] || [ $result != true ]); then
             check=true
             echo "waiting $1"
             sleep 1
@@ -70,7 +45,7 @@ data:
         while [ $check = true ]
         do
         check=false
-        if [ $check = false ] && [ $(kubectl get $1 -A 2>&1 | grep "error" | wc -l) -gt 0 ]; then
+        if [ $check = false ] && [ $(kubectl get $1 -A 2>&1 | grep -i "error" | wc -l) -gt 0 ]; then
             check=true
             echo "waiting $1"
             sleep 1
@@ -83,17 +58,17 @@ data:
     case $CHECK_TYPE in
         platform-pre-install-check)
             check_components_cr client
-            check_daemonset_install tke-auth-api tke
-            check_deployment_install tke-auth-controller tke
+            check_daemonset tke-auth-api tke
+            check_deployment tke-auth-controller tke
             ;;
         platform-post-install-check)
             check_components_cr cluster
-            check_deployment_install tke-platform-api tke
-            check_deployment_install tke-platform-controller tke
+            check_deployment tke-platform-api tke
+            check_deployment tke-platform-controller tke
             ;;
         platform-post-upgrade-check)
             check_components_cr cluster
-            check_deployment_upgrade tke-platform-api tke
-            check_deployment_upgrade tke-platform-controller tke
+            check_deployment tke-platform-api tke
+            check_deployment tke-platform-controller tke
             ;;
     esac

@@ -129,7 +129,6 @@ kubectl:
 # set the type of filesystem to use: filesystem, s3
 storage: filesystem
 persistence:
-  enabled: true
   accessMode: ReadWriteMany
   size: 40Gi
   storageClassName: anywhere-sc
