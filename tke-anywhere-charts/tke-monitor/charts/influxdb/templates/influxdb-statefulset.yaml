@@ -25,13 +25,9 @@ spec:
     spec:
       affinity:
 {{ toYaml .Values.affinity | indent 8 }}
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: "NoSchedule"
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: "NoSchedule"
+    {{- if .Values.tolerations }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+    {{- end }}
       containers:
       - name: influxdb
         image: "{{ .Values.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -46,6 +42,9 @@ spec:
             port: 8086
           initialDelaySeconds: 1
           periodSeconds: 10
+      {{- if .Values.resources }}
+        resources: {{ toYaml .Values.resources | nindent 10 }}
+      {{- end }}
         volumeMounts:
         - name: data
           mountPath: /var/lib/influxdb

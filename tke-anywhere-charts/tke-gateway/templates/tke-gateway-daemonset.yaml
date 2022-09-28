@@ -16,9 +16,9 @@ spec:
 {{ toYaml .Values.selector | indent 4 }}
   template:
     metadata:
-      labels:
-      {{- if .Values.podAnnotations }}
       annotations:
+        checksum/configmap_config: {{ include (print $.Template.BasePath "/tke-gateway-configmap.yaml") . | sha256sum }}
+      {{- if .Values.podAnnotations }}
 {{ toYaml .Values.podAnnotations | indent 8 }}
       {{- end }}
       labels:
@@ -29,13 +29,9 @@ spec:
 {{ toYaml .Values.affinity | indent 8 }}
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: "NoSchedule"
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: "NoSchedule"
+    {{- if .Values.tolerations }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+    {{- end }}
       containers:
         - name: tke-gateway
           image: "{{ .Values.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -77,13 +73,9 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 15
             periodSeconds: 20
-          resources:
-            limits:
-              cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ .Values.resources.limits.memory }}
-            requests:
-              cpu: {{ .Values.resources.requests.cpu }}
-              memory: {{ .Values.resources.requests.memory }}
+        {{- if .Values.resources }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: tke-gateway-volume
           configMap:

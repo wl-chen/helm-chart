@@ -12,8 +12,6 @@ provider:
       address: ""
     feature:
       skipConditions: []
-    docker:
-      extraArgs: {}
     kubelet:
       extraArgs: {}
     apiServer:
@@ -26,6 +24,9 @@ provider:
       endpoint: https://127.0.0.1:31138/auth/authz
     business:
       enabled: true
+k8sValidVersions: |
+  '["1.21.4-tke.3","1.20.6-tke.2"]'
+tkeVersion: industry-cloud-1.9
 api:
   labels:
     app: tke-platform-api
@@ -33,7 +34,7 @@ api:
   selector:
     matchLabels:
       app: tke-platform-api
-  podAnnotations:
+  podAnnotations: {}
   podLabels:
     app: tke-platform-api
   affinity:
@@ -62,6 +63,13 @@ api:
     repository: tdccimages/tke-platform-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
   resources:
     limits:
       cpu: 150m
@@ -84,7 +92,7 @@ controller:
   selector:
     matchLabels:
       app: tke-platform-controller
-  podAnnotations:
+  podAnnotations: {}
   podLabels:
     app: tke-platform-controller
   affinity:
@@ -118,6 +126,13 @@ controller:
     repository: tdccimages/tke-platform-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
   resources:
     limits:
       cpu: 100m

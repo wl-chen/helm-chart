@@ -14,7 +14,7 @@ api:
   selector:
     matchLabels:
       app: tke-auth-api
-  podAnnotations:
+  podAnnotations: {}
   podLabels:
     app: tke-auth-api
   affinity:
@@ -42,6 +42,13 @@ api:
     repository: tdccimages/tke-auth-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
   resources:
     limits:
       cpu: 500m
@@ -64,7 +71,7 @@ controller:
   selector:
     matchLabels:
       app: tke-auth-controller
-  podAnnotations:
+  podAnnotations: {}
   podLabels:
     app: tke-auth-controller
   affinity:
@@ -93,6 +100,13 @@ controller:
     repository: tdccimages/tke-auth-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
   resources:
     limits:
       cpu: 100m

@@ -4,7 +4,7 @@ annotations:
 selector:
   matchLabels:
     app: tke-gateway
-podAnnotations:
+podAnnotations: {}
 podLabels:
   app: tke-gateway
 affinity:
@@ -21,6 +21,13 @@ image:
   repository: tdccimages/tke-gateway
   tag: industry-cloud-1.9
   imagePullPolicy: IfNotPresent
+tolerations:
+- key: node-role.kubernetes.io/master
+  operator: Exists
+  effect: "NoSchedule"
+- key: node-role.kubernetes.io/control-plane
+  operator: Exists
+  effect: "NoSchedule"
 resources:
   limits:
     cpu: 100m

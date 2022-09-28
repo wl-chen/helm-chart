@@ -12,7 +12,7 @@ api:
   selector:
     matchLabels:
       app: tke-logagent-api
-  podAnnotations:
+  podAnnotations: {}
   podLabels:
     app: tke-logagent-api
   affinity:
@@ -41,6 +41,13 @@ api:
     repository: tdccimages/tke-logagent-api
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
   resources:
     limits:
       cpu: 100m
@@ -60,7 +67,7 @@ controller:
   selector:
     matchLabels:
       app: tke-logagent-controller
-  podAnnotations:
+  podAnnotations: {}
   podLabels:
     app: tke-logagent-controller
   affinity:
@@ -88,6 +95,13 @@ controller:
     repository: tdccimages/tke-logagent-controller
     tag: industry-cloud-1.9
     imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
   resources:
     limits:
       cpu: 100m

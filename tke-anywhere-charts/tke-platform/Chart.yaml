@@ -1,6 +1,6 @@
 apiVersion: v2
 name: tke-platform
-description: A Helm chart for Kubernetes
+description: A Helm chart for tke anywhere tke-platform
 
 # A chart can be either an 'application' or a 'library' chart.
 #

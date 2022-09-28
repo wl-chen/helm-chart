@@ -15,8 +15,16 @@ spec:
 {{ toYaml .Values.api.selector | indent 4 }}
   template:
     metadata:
-      {{- if .Values.api.podAnnotations }}
       annotations:
+        checksum/tke_platform_api_config: {{ include (print $.Template.BasePath "/tke-platform-api-configmap.yaml") . | sha256sum }}
+        checksum/provider_config: {{ include (print $.Template.BasePath "/provider-config-configmap.yaml") . | sha256sum }}
+        checksum/kubelet_config: {{ include (print $.Template.BasePath "/kubelet-configmap.yaml") . | sha256sum }}
+        checksum/kubeadm_config: {{ include (print $.Template.BasePath "/kubeadm-configmap.yaml") . | sha256sum }}
+        checksum/csi_operator_config: {{ include (print $.Template.BasePath "/csi-operator-manifests-configmap.yaml") . | sha256sum }}
+        checksum/gpu_config: {{ include (print $.Template.BasePath "/gpu-manifests-configmap.yaml") . | sha256sum }}
+        checksum/keepalived_config: {{ include (print $.Template.BasePath "/keepalived-manifests-configmap.yaml") . | sha256sum }}
+        checksum/metrics_server_config: {{ include (print $.Template.BasePath "/metrics-server-manifests-configmap.yaml") . | sha256sum }}
+      {{- if .Values.api.podAnnotations }}
 {{ toYaml .Values.api.podAnnotations | indent 8 }}
       {{- end }}
       labels:
@@ -24,13 +32,9 @@ spec:
     spec:
       affinity:
 {{ toYaml .Values.api.affinity | indent 8 }}
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: "NoSchedule"
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: "NoSchedule"
+    {{- if .Values.api.tolerations }}
+      tolerations: {{ toYaml .Values.api.tolerations | nindent 8 }}
+    {{- end }}
       containers:
         - name: tke-platform-api
           image: "{{ .Values.registry }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
@@ -68,8 +72,6 @@ spec:
               mountPath: /app/provider/baremetal
             - name: provider-config-volume
               mountPath: /app/provider/baremetal/conf/
-            - name: docker-volume
-              mountPath: /app/provider/baremetal/conf/docker/
             - name: kubelet-volume
               mountPath: /app/provider/baremetal/conf/kubelet/
             - name: kubeadm-volume
@@ -98,13 +100,9 @@ spec:
               scheme: HTTPS
             initialDelaySeconds: 15
             periodSeconds: 20
-          resources:
-            limits:
-              cpu: {{ .Values.api.resources.limits.cpu }}
-              memory: {{ .Values.api.resources.limits.memory }}
-            requests:
-              cpu: {{ .Values.api.resources.requests.cpu }}
-              memory: {{ .Values.api.resources.requests.memory }}
+        {{- if .Values.api.resources }}
+          resources: {{ toYaml .Values.api.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: certs
           emptyDir: {}
@@ -153,9 +151,6 @@ spec:
         - name: provider-config-volume
           configMap:
             name: provider-config
-        - name: docker-volume
-          configMap:
-            name: docker
         - name: kubelet-volume
           configMap:
             name: kubelet

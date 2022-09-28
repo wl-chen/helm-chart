@@ -15,8 +15,9 @@ spec:
 {{ toYaml .Values.controller.selector | indent 4 }}
   template:
     metadata:
-      {{- if .Values.controller.podAnnotations }}
       annotations:
+        checksum/configmap_config: {{ include (print $.Template.BasePath "/tke-monitor-controller-configmap.yaml") . | sha256sum }}
+      {{- if .Values.controller.podAnnotations }}
 {{ toYaml .Values.controller.podAnnotations | indent 8 }}
       {{- end }}
       labels:
@@ -24,13 +25,9 @@ spec:
     spec:
       affinity:
 {{ toYaml .Values.controller.affinity | indent 8 }}
-      tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: Exists
-        effect: "NoSchedule"
-      - key: node-role.kubernetes.io/control-plane
-        operator: Exists
-        effect: "NoSchedule"
+    {{- if .Values.controller.tolerations }}
+      tolerations: {{ toYaml .Values.controller.tolerations | nindent 8 }}
+    {{- end }}
       containers:
         - name: tke-monitor-controller
           image: "{{ .Values.registry }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
@@ -62,13 +59,9 @@ spec:
               scheme: HTTPS
             initialDelaySeconds: 15
             periodSeconds: 20
-          resources:
-            limits:
-              cpu: {{ .Values.controller.resources.limits.cpu }}
-              memory: {{ .Values.controller.resources.limits.memory }}
-            requests:
-              cpu: {{ .Values.controller.resources.requests.cpu }}
-              memory: {{ .Values.controller.resources.requests.memory }}
+        {{- if .Values.controller.resources }}
+          resources: {{ toYaml .Values.controller.resources | nindent 12 }}
+        {{- end }}
       volumes:
         - name: certs
           emptyDir: {}
