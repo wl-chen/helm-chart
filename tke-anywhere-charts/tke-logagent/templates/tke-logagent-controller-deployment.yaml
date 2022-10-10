@@ -30,7 +30,7 @@ spec:
     {{- end }}
       containers:
         - name: tke-logagent-controller
-          image: "{{ .Values.logagent }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
             - /bin/sh
@@ -99,7 +99,7 @@ spec:
                       path: admin.key
                   optional: false
               - secret:
-                  name: tke-logagent-cluster-certs
+                  name: tke-logagent-cluster-secrets
                   items:
                     - key: token.csv
                       path: token.csv

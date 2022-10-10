@@ -30,7 +30,7 @@ spec:
     {{- end }}
       containers:
         - name: tke-notify-controller
-          image: "{{ .Values.notify }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
+          image: "{{ .Values.registry }}/{{ .Values.controller.image.repository }}:{{ .Values.controller.image.tag }}"
           imagePullPolicy: "{{ .Values.controller.image.imagePullPolicy }}"
           command:
             - /bin/sh

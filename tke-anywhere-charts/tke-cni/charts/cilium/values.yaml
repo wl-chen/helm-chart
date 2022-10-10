@@ -102,7 +102,7 @@ ip-masq-agent:
     affinity:
     image:
       repository: tkestack/ip-masq-agent
-      tag: v1.0.0
+      tag: v2.6.2
       imagePullPolicy: IfNotPresent  
       
 tke-cni-agent:

@@ -25,7 +25,7 @@ provider:
     business:
       enabled: true
 k8sValidVersions: |
-  '["1.21.4-tke.3","1.20.6-tke.2"]'
+  '["1.21.4-tke.3"]'
 tkeVersion: industry-cloud-1.9
 api:
   labels:

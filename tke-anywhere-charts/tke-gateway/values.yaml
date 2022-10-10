@@ -52,7 +52,7 @@ enableMonitor: true
 enableNotify: true
 enableRegistry: true
 enableLogagent: true
-enableAudit: true
+enableAudit: false
 enableApplication: true
 enableMesh: 
 certificate:

@@ -8,7 +8,7 @@ entries:
         url: https://cert-manager.io/public-keys/cert-manager-keyring-2021-09-20-1020CF3C033D4F35BAE1C19E1226061C665DF13E.gpg
     apiVersion: v1
     appVersion: v1.8.0
-    created: "2022-09-30T15:56:32.547865471+08:00"
+    created: "2022-10-11T15:29:57.688749022+08:00"
     description: A Helm chart for cert-manager
     digest: 33e57b441c35fa9bc86b6080263154fe8409306d6ca270ea353225637f52035c
     home: https://github.com/cert-manager/cert-manager
@@ -31,9 +31,9 @@ entries:
       artifacthub.io/prerelease: "false"
     apiVersion: v1
     appVersion: v1.5.5
-    created: "2022-09-30T15:56:32.538955471+08:00"
+    created: "2022-10-11T15:29:57.679547096+08:00"
     description: A Helm chart for cert-manager
-    digest: 5d0354d9f5a5db06815d15f37770299187569b0fce0e371a129066b0597c0971
+    digest: 44483edd1592d555e5fb86007bdb4a760ed75b18519eb0878cd74352a2bb6e76
     home: https://github.com/jetstack/cert-manager
     icon: https://raw.githubusercontent.com/jetstack/cert-manager/master/logo/logo.png
     keywords:
@@ -54,7 +54,7 @@ entries:
       artifacthub.io/prerelease: "false"
     apiVersion: v1
     appVersion: v1.5.5
-    created: "2022-09-30T15:56:32.544735455+08:00"
+    created: "2022-10-11T15:29:57.685962248+08:00"
     description: A Helm chart for cert-manager
     digest: 127c9e59575a5e4a35cc31298676e3fc5a3ea0a22ea11ad0c02f3595f60315f9
     home: https://github.com/jetstack/cert-manager
@@ -76,7 +76,7 @@ entries:
   cilium:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.549175993+08:00"
+    created: "2022-10-11T15:29:57.690882643+08:00"
     description: A Helm chart for Kubernetes
     digest: 533ad0b2d22bc168e98e6af871bfed1f2b3b87c0b64dcb7a8affe73e30eb0680
     name: cilium
@@ -86,7 +86,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.548235293+08:00"
+    created: "2022-10-11T15:29:57.689936073+08:00"
     description: A Helm chart for Kubernetes
     digest: b8736c798c2bb32a73a2cd3a6d52d3a498a9a52755699ece1e332dc249b3ba26
     name: cilium
@@ -97,14 +97,14 @@ entries:
   elastic-gpu-operator:
   - apiVersion: v2
     appVersion: v1.0.0
-    created: "2022-09-30T15:56:32.551332567+08:00"
+    created: "2022-10-11T15:29:57.693122795+08:00"
     dependencies:
     - condition: nfd.enabled
       name: node-feature-discovery
       repository: https://kubernetes-sigs.github.io/node-feature-discovery/charts
       version: 0.8.2
     description: NVIDIA GPU Operator creates/configures/manages GPUs atop Kubernetes
-    digest: 60f0224f7299ff792e77a1832a80355e6500cac74539c6ee5e0732d02c6cc72d
+    digest: 5ceee42847f506d303e87ba70397704081e8f8160747781390886fc29e936ae6
     home: https://docs.nvidia.com/datacenter/cloud-native/gpu-operator/overview.html
     icon: https://assets.nvidiagrid.net/ngc/logos/GPUoperator.png
     keywords:
@@ -123,10 +123,10 @@ entries:
   hostpath-provisioner:
   - apiVersion: v2
     appVersion: v0.2.5
-    created: "2022-09-30T15:56:32.551719722+08:00"
+    created: "2022-10-11T15:29:57.693532352+08:00"
     description: hostpath-provisioner is an automatic provisioner creating Persistent
       Volumes from the hostpath.
-    digest: 9b91c5ef19396b6d85681c3fcbe0c5d958201a29617f504889142a3b69a32faa
+    digest: 2a874725e7d85a63558ef0d853d87f1c3c2ea2b9a40d11e00f9af4fb2b42ac73
     home: https://github.com/rimusz/charts/tree/master/stable/hostpath-provisioner
     keywords:
     - hostpath
@@ -155,10 +155,10 @@ entries:
       artifacthub.io/prerelease: "false"
     apiVersion: v2
     appVersion: 1.2.1
-    created: "2022-09-30T15:56:32.554881588+08:00"
+    created: "2022-10-11T15:29:57.696866219+08:00"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy
       and load balancer
-    digest: 2bf2a436bfa76e38934d377443d3f3b8279102deb2b47ab1013f7d7de5bd898a
+    digest: fa58a4bd8fb8911b5b02a3321748191e6b9d3befe8ec5c509b16b42a1ff85302
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
     keywords:
@@ -179,7 +179,7 @@ entries:
   keepalived:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.555435874+08:00"
+    created: "2022-10-11T15:29:57.697250238+08:00"
     description: A Helm chart for Kubernetes
     digest: 99716ddb84f7f126a0cd11d7db809612f58505970c7251bb28305f9b143c3d4c
     name: keepalived
@@ -189,7 +189,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.555181899+08:00"
+    created: "2022-10-11T15:29:57.697016581+08:00"
     description: A Helm chart for Kubernetes
     digest: 6d7703ce862cf731c36628f37c1819bbff07783b65e8e7ca85f0d03004fac3d0
     name: keepalived
@@ -197,12 +197,45 @@ entries:
     urls:
     - https://wl-chen.github.io/helm-chart/keepalived-0.1.0.tgz
     version: 0.1.0
+  metrics-server:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: "New defaultArgs value to enable overriding the default arguments."
+        - kind: changed
+          description: "Update Metrics Server image to v0.5.1."
+    apiVersion: v2
+    appVersion: 0.5.1
+    created: "2022-10-11T15:29:57.697916414+08:00"
+    description: Metrics Server is a scalable, efficient source of container resource
+      metrics for Kubernetes built-in autoscaling pipelines.
+    digest: a86534f76d8bdc1abea26cd31a149b0d6c3a9ac91b96658ce5f7ef9ba8ea4f84
+    home: https://github.com/kubernetes-sigs/metrics-server
+    icon: https://avatars.githubusercontent.com/u/36015203?s=400&v=4
+    keywords:
+    - kubernetes
+    - metrics-server
+    - metrics
+    maintainers:
+    - name: stevehipwell
+      url: https://github.com/stevehipwell
+    - name: krmichel
+      url: https://github.com/krmichel
+    - name: endrec
+      url: https://github.com/endrec
+    name: metrics-server
+    sources:
+    - https://github.com/kubernetes-sigs/metrics-server
+    type: application
+    urls:
+    - https://wl-chen.github.io/helm-chart/metrics-server-3.6.0.tgz
+    version: 3.6.0
   tke-application:
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.55686003+08:00"
+    created: "2022-10-11T15:29:57.699324919+08:00"
     description: A Helm chart for tke anywhere tke-application
-    digest: 9444410d2eaed9827e0117bead3c956f1cf5aeb0e341fe373655308048bc9fd1
+    digest: 611956bc9a1d9df84cbe69b683a4de32a9bec7f7b63567d173e4136e46c2c1da
     name: tke-application
     type: application
     urls:
@@ -210,7 +243,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.556108854+08:00"
+    created: "2022-10-11T15:29:57.698595865+08:00"
     description: A Helm chart for Kubernetes
     digest: ee5d68f5c2fc008de577ca74f4c8e69478ac28b268b1a3c8fae419afc734d809
     name: tke-application
@@ -218,12 +251,23 @@ entries:
     urls:
     - https://wl-chen.github.io/helm-chart/tke-application-0.1.0.tgz
     version: 0.1.0
+  tke-audit:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2022-10-11T15:29:57.6998384+08:00"
+    description: A Helm chart for tke anywhere audit chart
+    digest: dc7e4d30703791205b893a9a9c55b37cf8a09d8e0e54eb116f4f79a6f4a45ce6
+    name: tke-audit
+    type: application
+    urls:
+    - https://wl-chen.github.io/helm-chart/tke-audit-0.1.0.tgz
+    version: 0.1.0
   tke-auth:
   - apiVersion: v2
     appVersion: 0.1.3
-    created: "2022-09-30T15:56:32.559626715+08:00"
+    created: "2022-10-11T15:29:57.702575982+08:00"
     description: A Helm chart for tke anywhere tke-auth
-    digest: 28fc1e1374db18739564b326f6fe5098009f9709e92b5c979b6fb71572ce49af
+    digest: 2681889f2b642eec5588d429ba2e7ac69bee8d5db18b4ff7b3309cb31f6a364b
     name: tke-auth
     type: application
     urls:
@@ -231,7 +275,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2022-09-30T15:56:32.558821179+08:00"
+    created: "2022-10-11T15:29:57.701795912+08:00"
     description: A Helm chart for Kubernetes
     digest: 9b11462830ce59b3fcaebb57145ba2ba2b03018d2bacd8ca3ade08406758bfea
     name: tke-auth
@@ -241,7 +285,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.558057039+08:00"
+    created: "2022-10-11T15:29:57.70104115+08:00"
     description: A Helm chart for Kubernetes
     digest: 69490f014f328f1854990f3ae07d1f87909b17f5502af33d9c83fa3a5f4f9618
     name: tke-auth
@@ -251,7 +295,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.55729896+08:00"
+    created: "2022-10-11T15:29:57.700254979+08:00"
     description: A Helm chart for Kubernetes
     digest: 82cd3f1d6c0a2de99ec87611aa28b6beafc62c382bec083fcaafa15dda7286fc
     name: tke-auth
@@ -262,14 +306,14 @@ entries:
   tke-cni:
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.563604569+08:00"
+    created: "2022-10-11T15:29:57.706659242+08:00"
     dependencies:
     - condition: global.enabledCilium
       name: cilium
       repository: ""
       version: 0.1.2
     description: A Helm chart for tke anywhere cni plugins
-    digest: 1a544e0b4f13ea620b622478f1a3545eb138380a988e65d1bfc4741ced525fcf
+    digest: 05fa4fcff27eca4a98c463bdd74bad94e38f5bd398894384355b08060c890ecc
     name: tke-cni
     type: application
     urls:
@@ -277,7 +321,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.561236948+08:00"
+    created: "2022-10-11T15:29:57.704811113+08:00"
     dependencies:
     - condition: global.enabledCilium
       name: cilium
@@ -293,9 +337,9 @@ entries:
   tke-gateway:
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2022-09-30T15:56:32.565012653+08:00"
+    created: "2022-10-11T15:29:57.708006923+08:00"
     description: A Helm chart for tke anywhere tke-gateway
-    digest: 1f1c158df623b238ea8505a1aa5be5156878aae25581a44d7fd25e66875e1abe
+    digest: 343778fe1268c9d55fa1fc73cb54cfb8e6b715a0599919823b18f45b0b0cb807
     name: tke-gateway
     type: application
     urls:
@@ -303,7 +347,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.56446082+08:00"
+    created: "2022-10-11T15:29:57.707498342+08:00"
     description: A Helm chart for Kubernetes
     digest: af1ae0cc313d7cbd59dbed5b2b1e2dfac109c7f4b9c38a3aac50872f6c0532e6
     name: tke-gateway
@@ -313,7 +357,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.563975563+08:00"
+    created: "2022-10-11T15:29:57.707004478+08:00"
     description: A Helm chart for Kubernetes
     digest: 52f45d0540412231af7c7bf1b9f55abaa81db758aac0e75faa308dd74540fd54
     name: tke-gateway
@@ -324,14 +368,14 @@ entries:
   tke-lb:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.56551915+08:00"
+    created: "2022-10-11T15:29:57.70851828+08:00"
     dependencies:
     - condition: global.enableKeepalived
       name: keepalived
       repository: ""
       version: 0.1.0
     description: A Helm chart for Kubernetes
-    digest: 1b996d2443dbd8b661c68552709051226d8a0dff09c2cd560df8f9dbf6685b78
+    digest: 5ee0d8be1682bfd8779415f3508bf7e910f56ba08424c0c2564f30e2aeec817a
     name: tke-lb
     type: application
     urls:
@@ -340,9 +384,9 @@ entries:
   tke-logagent:
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.566959085+08:00"
+    created: "2022-10-11T15:29:57.709954568+08:00"
     description: A Helm chart for tke anywhere tke-logagent
-    digest: c7eb0be3f7c264e33a1d0f1f189167863e46320d74d11a760017a09b592c7c1c
+    digest: 24a16ee1c0458a8bc363c470e86d314b9a1130653d75901a5829f83ad61e287a
     name: tke-logagent
     type: application
     urls:
@@ -350,7 +394,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.566189183+08:00"
+    created: "2022-10-11T15:29:57.709209904+08:00"
     description: A Helm chart for Kubernetes
     digest: 315c73c53b949c8401e58234b3831b538241bea7d64fa4ca23aeb785ed582bbe
     name: tke-logagent
@@ -361,14 +405,14 @@ entries:
   tke-monitor:
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2022-09-30T15:56:32.5709064+08:00"
+    created: "2022-10-11T15:29:57.713833014+08:00"
     dependencies:
     - condition: global.enableInfluxdb
       name: influxdb
       repository: ""
       version: 0.1.1
     description: A Helm chart for tke anywhere monitor chart
-    digest: e0da56a5e19616c675d6a603161f706717988df9167f4d90dea4a3ab1ac00c36
+    digest: 6a9fa69f0e54c8cf93f0005bb8d507477d6162e456cc81baaf93b7d810f6ef2a
     name: tke-monitor
     type: application
     urls:
@@ -376,7 +420,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.569198905+08:00"
+    created: "2022-10-11T15:29:57.712590359+08:00"
     dependencies:
     - condition: global.enableInfluxdb
       name: influxdb
@@ -391,7 +435,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.568099507+08:00"
+    created: "2022-10-11T15:29:57.711503565+08:00"
     dependencies:
     - condition: global.enableInfluxdb
       name: influxdb
@@ -407,9 +451,9 @@ entries:
   tke-notify:
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.57227983+08:00"
+    created: "2022-10-11T15:29:57.715163052+08:00"
     description: A Helm chart for tke anywhere tke-notify
-    digest: 5f45491c84eaef22037e13442e4989096b5a0067b737f79838e5b8ac3d16ea02
+    digest: b28a22ab5def40a283b2f27b5182450034b0a0c89200205d32aaa5f38774ab72
     name: tke-notify
     type: application
     urls:
@@ -417,7 +461,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.571566013+08:00"
+    created: "2022-10-11T15:29:57.714472039+08:00"
     description: A Helm chart for Kubernetes
     digest: 5772f579dd812bbd5777d034135f2f23639ea654d91ff1b6af5d90b0be49a680
     name: tke-notify
@@ -428,9 +472,9 @@ entries:
   tke-platform:
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2022-09-30T15:56:32.574776951+08:00"
+    created: "2022-10-11T15:29:57.718120506+08:00"
     description: A Helm chart for tke anywhere tke-platform
-    digest: cc835b01d14e340d119739cf39ade7d461c727391cde65d223f24f6200bd20bf
+    digest: 188f8224cfc99de08c17e9cb7c41030e8f6dae7d26ef0907dfb237d2a7fade6a
     name: tke-platform
     type: application
     urls:
@@ -438,7 +482,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.573843495+08:00"
+    created: "2022-10-11T15:29:57.716645055+08:00"
     description: A Helm chart for Kubernetes
     digest: 2ec3bd38d0dc5c7a03bb6dd1e01fcb9235de4768d756e83619b89332dcc8d403
     name: tke-platform
@@ -448,7 +492,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-09-30T15:56:32.572924536+08:00"
+    created: "2022-10-11T15:29:57.715773504+08:00"
     description: A Helm chart for Kubernetes
     digest: 014f61471a0538f74484a681c928044793c903028b075986d650f56ebf723e02
     name: tke-platform
@@ -459,14 +503,14 @@ entries:
   tke-registry:
   - apiVersion: v2
     appVersion: 0.1.2
-    created: "2022-09-30T15:56:32.581802877+08:00"
+    created: "2022-10-11T15:29:57.72458422+08:00"
     dependencies:
     - condition: global.enableDockerRegistry
       name: docker-registry
       repository: https://helm.twun.io
       version: 2.1.0
     description: A Helm chart for tke anywhere tke-registry
-    digest: 17402836a8c4244d2bfca899b604d9dd9d472369530a380e601a15a9545001f7
+    digest: 3a44b10d7810f6d1fff3eae8fbb24448b37c786e478e66d1d2d17719db50066c
     name: tke-registry
     type: application
     urls:
@@ -474,7 +518,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.57957042+08:00"
+    created: "2022-10-11T15:29:57.722407286+08:00"
     dependencies:
     - condition: global.enableDockerRegistry
       name: docker-registry
@@ -489,7 +533,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.577402634+08:00"
+    created: "2022-10-11T15:29:57.720290997+08:00"
     dependencies:
     - condition: global.enableDockerRegistry
       name: docker-registry
@@ -505,7 +549,7 @@ entries:
   tke-storage:
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2022-09-30T15:56:32.587967831+08:00"
+    created: "2022-10-11T15:29:57.730526347+08:00"
     dependencies:
     - condition: global.enableCephFS
       name: ceph-csi-cephfs
@@ -520,7 +564,7 @@ entries:
       repository: https://charts.rimusz.net
       version: 0.2.13
     description: A Helm chart for tke anywhere storage provisioner
-    digest: 84b0b6d1626376ebd00656c7538c0a899739c243957b8d50a90b2eb7897c1f39
+    digest: 62c8425c49acbe2d585e07a5db5eaf82e669e84413cd5906ef216719cd17ac43
     name: tke-storage
     type: application
     urls:
@@ -528,7 +572,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2022-09-30T15:56:32.584292394+08:00"
+    created: "2022-10-11T15:29:57.727488433+08:00"
     dependencies:
     - condition: global.enableCephFS
       name: ceph-csi-cephfs
@@ -545,4 +589,4 @@ entries:
     urls:
     - https://wl-chen.github.io/helm-chart/tke-storage-0.1.0.tgz
     version: 0.1.0
-generated: "2022-09-30T15:56:32.532026817+08:00"
+generated: "2022-10-11T15:29:57.672988664+08:00"

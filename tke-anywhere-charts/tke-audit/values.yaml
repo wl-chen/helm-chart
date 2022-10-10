@@ -1,0 +1,81 @@
+registry: ccr.ccs.tencentyun.com
+
+enableAuth: true
+enableAudit: false
+
+api:
+  labels:
+    app: tke-audit-api
+  annotations:
+  selector:
+    matchLabels:
+      app: tke-audit-api
+  podAnnotations: {}
+  podLabels:
+    app: tke-audit-api
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - tke-audit-api
+          topologyKey: kubernetes.io/hostname
+  replicas: 2
+  image:
+    repository: tdccimages/tke-audit-api
+    tag: industry-cloud-1.9
+    imagePullPolicy: IfNotPresent
+  tolerations:
+  - key: node-role.kubernetes.io/master
+    operator: Exists
+    effect: "NoSchedule"
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: "NoSchedule"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  # OIDC认证方式客户端id，默认为default
+  oIDCClientID: default
+  # OIDC认证方式的issuer_url，默认为https://tke-auth-api/oidc
+  oIDCIssuerURL: https://tke-auth-api/oidc
+  # 是否开启OIDC认证，默认不开启
+  useOIDCCA: false
+
+elasticSearch:
+  storageAddress: 127.0.0.1:9200
+  reserveDays: 7
+  username:
+  password:
+  index: auditevent
+
+certificate:
+  serverCertDuration: 876000h
+  serverCertRenewBefore: 875900h
+  dnsNames:
+  uris: 
+  ipAddresses:
+
+kubectl:
+  image:
+    repository: tdccimages/kubectl
+    tag: 1.22.7
+    imagePullPolicy: IfNotPresent

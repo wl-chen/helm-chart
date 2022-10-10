@@ -1,0 +1,52 @@
+{{- if .Values.enableAudit -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-audit-api
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  tke-audit-api.toml: |
+    audit_config = "/app/conf/tke-audit-api-config.yaml"
+
+    [secure_serving]
+    tls_cert_file = "/app/certs/server.crt"
+    tls_private_key_file = "/app/certs/server.key"
+
+    [authentication]
+    token_auth_file = "/app/certs/token.csv"
+
+      [authentication.oidc]
+{{- if .Values.enableAuth }}
+      client_id = "default"
+      issuer_url = "https://tke-auth-api/oidc"
+      external_issuer_url = "https://tke-auth-api/oidc"
+      ca_file = "/app/certs/ca.crt"
+      username_prefix ="-"
+      username_claim = "name"
+      groups_claim = "groups"
+      tenantid_claim = "federated_claims"
+{{- else }}
+      client_id = {{ .Values.api.oIDCClientID }}
+      issuer_url = {{ .Values.api.oIDCIssuerURL }}
+{{- if .Values.api.useOIDCCA }}
+      ca_file = "/app/certs/oidc-ca.crt"
+{{- end}}
+{{- end }}
+
+      [authentication.requestheader]
+      client_ca_file = "/app/certs/ca.crt"
+      username_headers = "X-Remote-User"
+      group_headers = "X-Remote-Group"
+      extra_headers_prefix = "X-Remote-Extra-"
+
+  tke-audit-api-config.yaml: |
+    kind: AuditConfiguration
+    apiVersion: audit.config.tkestack.io/v1
+    storage:
+      elasticSearch:
+        address: "{{ .Values.elasticSearch.storageAddress }}"
+        reserveDays: {{ .Values.elasticSearch.reserveDays }}
+        username: "{{ .Values.elasticSearch.username }}"
+        password: "{{ .Values.elasticSearch.password }}"
+        index: "{{ .Values.elasticSearch.index }}"
+{{- end -}}

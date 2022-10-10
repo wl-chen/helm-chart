@@ -1,4 +1,4 @@
-logagent: ccr.ccs.tencentyun.com
+registry: ccr.ccs.tencentyun.com
 
 
 enableAuth: true

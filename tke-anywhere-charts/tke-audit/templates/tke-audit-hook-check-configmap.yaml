@@ -1,0 +1,77 @@
+{{- if .Values.enableAudit -}}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: tke-audit-chart-hook-check
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  chart-hook-check.sh: |
+    #!/bin/bash
+
+    function check_deployment {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        result=$(kubectl get deployment $1 -n $2 --ignore-not-found -o go-template --template='{{ "{{if or (ne (.status.replicas) (.status.readyReplicas)) (ne (.status.replicas) (.status.updatedReplicas))}}false{{else}}true{{end}}" }}')
+        if [ $check = false ] && ([ -z $result ] || [ $result != true ]); then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+
+    }
+
+    function check_daemonset {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        result=$(kubectl get daemonset $1 -n $2 --ignore-not-found -o go-template --template='{{ "{{if or (ne (.status.desiredNumberScheduled) (.status.numberReady)) (ne (.status.desiredNumberScheduled) (.status.updatedNumberScheduled))}}false{{else}}true{{end}}" }}')
+        if [ $check = false ] && ([ -z $result ] || [ $result != true ]); then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    function check_components_cr {
+        check=true
+        while [ $check = true ]
+        do
+        check=false
+        if [ $check = false ] && [ $(kubectl get $1 -A 2>&1 | grep -i error | wc -l) -gt 0 ]; then
+            check=true
+            echo "waiting $1"
+            sleep 1
+        fi
+        done
+    }
+
+    CHECK_TYPE=$1
+    echo $CHECK_TYPE
+    case $CHECK_TYPE in
+        audit-pre-install-check)
+            check_components_cr client
+            check_daemonset tke-auth-api tke
+            check_deployment tke-auth-controller tke
+            ;;
+        audit-pre-upgrade-check)
+            check_components_cr client
+            check_daemonset tke-auth-api tke
+            check_deployment tke-auth-controller tke
+            ;;
+        audit-post-install-check)
+            check_deployment tke-audit-api tke
+            ;;
+        audit-post-upgrade-check)
+            check_deployment tke-audit-api tke
+            ;;
+    esac
+{{- end -}}

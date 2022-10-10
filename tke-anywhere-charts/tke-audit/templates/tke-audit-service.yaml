@@ -1,0 +1,17 @@
+{{- if .Values.enableAudit -}}
+kind: Service
+apiVersion: v1
+metadata:
+  name: tke-audit-api
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    tke.prometheus.io/scrape: "true"
+    prometheus.io/scheme: https
+spec:
+  selector:
+    app: tke-audit-api
+  ports:
+    - protocol: TCP
+      port: 443
+      targetPort: 9461
+{{- end -}}

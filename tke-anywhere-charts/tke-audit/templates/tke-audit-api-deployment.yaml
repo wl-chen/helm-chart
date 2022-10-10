@@ -1,0 +1,108 @@
+{{- if .Values.enableAudit -}}
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+{{ toYaml .Values.api.labels | indent 4 }}
+  name: tke-audit-api
+  namespace: {{ .Release.Namespace | quote }}
+  {{- if .Values.api.annotations }}
+  annotations:
+{{ toYaml .Values.api.annotations | indent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+{{ toYaml .Values.api.selector | indent 4 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configmap_config: {{ include (print $.Template.BasePath "/tke-audit-api-configmap.yaml") . | sha256sum }}
+      {{- if .Values.api.podAnnotations }}
+{{ toYaml .Values.api.podAnnotations | indent 8 }}
+      {{- end }}
+      labels:
+{{ toYaml .Values.api.podLabels | indent 8 }}
+    spec:
+      affinity:
+{{ toYaml .Values.api.affinity | indent 8 }}
+    {{- if .Values.api.tolerations }}
+      tolerations: {{ toYaml .Values.api.tolerations | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: tke-audit-api
+          image: "{{ .Values.registry }}/{{ .Values.api.image.repository }}:{{ .Values.api.image.tag }}"
+          imagePullPolicy: "{{ .Values.api.image.imagePullPolicy }}"
+          command:
+            - /bin/sh
+            - -c
+            - >
+              ln -s /app/certs/cert-manager/ca.crt /app/certs/ca.crt;
+              ln -s /app/certs/cert-manager/ca.key /app/certs/ca.key;
+              ln -s /app/certs/cert-manager/server.crt /app/certs/server.crt;
+              ln -s /app/certs/cert-manager/server.key /app/certs/server.key;
+              ln -s /app/certs/cert-manager/token.csv /app/certs/token.csv;
+              /app/bin/tke-audit-api -C=/app/conf/tke-audit-api.toml
+          volumeMounts:
+            - name: cert-manager-certs
+              mountPath: /app/certs/cert-manager
+            - name: certs
+              mountPath: /app/certs
+            - name: tke-audit-api-volume
+              mountPath: /app/conf
+            - name: timezone
+              mountPath: /etc/localtime
+          ports:
+            - containerPort: 9461
+          readinessProbe:
+            httpGet:
+              port: 9461
+              path: /healthz/ping
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              port: 9461
+              path: /healthz
+              scheme: HTTPS
+            initialDelaySeconds: 15
+            periodSeconds: 20
+        {{- if .Values.api.resources }}
+          resources: {{ toYaml .Values.api.resources | nindent 12 }}
+        {{- end }}
+      volumes:
+        - name: tke-audit-api-volume
+          configMap:
+            name: tke-audit-api
+        - name: timezone
+          hostPath:
+            path: /etc/localtime
+        - name: certs
+          emptyDir: {}
+        - name: cert-manager-certs
+          projected:
+            sources:
+              - secret:
+                  name: tke-ca
+                  items:
+                    - key: tls.crt
+                      path: ca.crt
+                    - key: tls.key
+                      path: ca.key
+                  optional: false
+              - secret:
+                  name: tke-audit-server-secret
+                  items:
+                    - key: tls.crt
+                      path: server.crt
+                    - key: tls.key
+                      path: server.key
+                  optional: false
+              - secret:
+                  name: tke-audit-cluster-secrets
+                  items:
+                    - key: token.csv
+                      path: token.csv
+                  optional: false
+{{- end -}}
