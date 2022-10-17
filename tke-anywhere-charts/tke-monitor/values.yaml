@@ -1,5 +1,6 @@
 global:
   enableInfluxdb: true
+  mainIP: 10.0.10.15
 
 registry: ccr.ccs.tencentyun.com
 etcd:
@@ -12,9 +13,10 @@ storage:
   # influxdb, elasticsearch, thanos
   type: influxdb
   # 默认的master[0]内网ip
-  address: http://influxdb.tke.svc.cluster.local:8086
+  address: "" #only used for outside storage
   username: ""
   password: ""
+  retentionDays: 15 # for influxdb
 api:
   labels:
     app: tke-monitor-api

@@ -133,7 +133,7 @@ data:
 {{- if eq .Values.storage.type "influxdb" }}
       influxDB:
         servers:
-          - address: {{ .Values.storage.address }}
+          - address: http://{{ .Values.global.mainIP }}:30086
             username: {{ .Values.storage.username }}
             password: {{ .Values.storage.password }}
             timeoutSeconds: 10
@@ -148,7 +148,7 @@ data:
 {{- if eq .Values.storage.type "thanos" }}
       thanos:
         servers:
-          - address: {{ .Values.storage.address }}
+          - address: http://{{ .Values.global.mainIP }}:30086
 {{- end }}
 
 {{- if .Values.enableAudit }}

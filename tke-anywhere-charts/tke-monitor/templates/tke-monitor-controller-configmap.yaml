@@ -33,7 +33,11 @@ data:
 
       [features]
       monitor_storage_type = "{{ .Values.storage.type }}"
+      {{- if eq .Values.storage.type "elasticsearch" }}
       monitor_storage_addresses = "{{ .Values.storage.address }}"
+      {{- else }}
+      monitor_storage_addresses = "http://{{ .Values.global.mainIP }}:30086"
+      {{- end }}
 
   tke-monitor-api-config.yaml: |
     apiVersion: v1
@@ -104,10 +108,13 @@ data:
 {{- if eq .Values.storage.type "influxdb" }}
       influxDB:
         servers:
-          - address: {{ .Values.storage.address }}
+          - address: http://{{ .Values.global.mainIP }}:30086
             username: {{ .Values.storage.username }}
             password: {{ .Values.storage.password }}
             timeoutSeconds: 10
+        {{- if .Values.storage.retentionDays }}
+        retentionDays: {{ .Values.storage.retentionDays }}
+        {{- end }}
 {{- end }}
 {{- if eq .Values.storage.type "elasticsearch" }}
       elasticSearch:
@@ -119,5 +126,5 @@ data:
 {{- if eq .Values.storage.type "thanos" }}
       thanos:
         servers:
-          - address: {{ .Values.storage.address }}
+          - address: http://{{ .Values.global.mainIP }}:30086
 {{- end }}

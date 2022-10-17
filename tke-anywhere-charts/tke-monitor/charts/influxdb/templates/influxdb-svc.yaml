@@ -4,10 +4,12 @@ metadata:
   name: influxdb
   namespace: {{ .Release.Namespace | quote }}
 spec:
+  type: NodePort
   ports:
     - name: remote-write
       port: 8086
       targetPort: 8086
       protocol: TCP
+      nodePort: 30086
   selector:
     app: influxdb
