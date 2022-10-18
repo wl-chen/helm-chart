@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: scheduler-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: kube-scheduler-daemon-set
+spec:
+  selector:
+    matchLabels:
+      app: scheduler-config
+  template:
+    metadata:
+      labels:
+        app: scheduler-config
+    spec:
+      containers:
+      - name: config
+        image: {{ .Values.global.repository }}/{{ .Values.job.image }}:{{ .Values.job.version }}
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/entrypoint.sh", "removeExtenders"]
+          postStart:
+            exec:
+              command: ["/bin/entrypoint.sh", "addExtenders"]
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: kubernetes
+          mountPath: /etc/kubernetes
+        - name: configmap-volume
+          mountPath: /bin/entrypoint.sh
+          readOnly: true
+          subPath: entrypoint.sh
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        command: ["sleep", "1000000"]
+      volumes:
+      - name: kubernetes
+        hostPath:
+          path: /etc/kubernetes
+      - name: configmap-volume
+        configMap:
+          defaultMode: 0700
+          name: kube-scheduler-configmap
+      restartPolicy: Always
+      {{- if .Values.tolerations }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 8 }}
+      {{- end }}
+      priorityClassName: system-node-critical
+      hostNetwork: true
+      nodeSelector:
+        "node-role.kubernetes.io/master": ""
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - scheduler-config
+            topologyKey: "kubernetes.io/hostname"

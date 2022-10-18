@@ -26,13 +26,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: qgpu-license-server
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: qgpu-license-server
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -40,14 +40,14 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: qgpu-license-server
-    namespace: kube-system
+    namespace: {{ .Release.Namespace }}
 ---
 {{- if .Values.qgpu.license_server.license }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: tecentcloud-qgpu-license-data0001
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
   labels:
     tencent-qgpu: tecentcloud-qgpu-license-data
 data:
@@ -58,7 +58,7 @@ kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: qgpu-license-server
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -110,7 +110,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: qgpu-license-server
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
   labels:
     app: qgpu-license-server
 spec:

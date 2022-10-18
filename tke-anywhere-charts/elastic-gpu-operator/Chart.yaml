@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: v1.0.0
+appVersion: 1.0.0
 dependencies:
 - condition: nfd.enabled
   name: node-feature-discovery
@@ -16,6 +16,9 @@ keywords:
 - deep learning
 - monitoring
 - tesla
+- addonARCH:amd64
+- addonKind:gpu
+- owner:addon
 kubeVersion: '>= 1.14.0-0'
 name: elastic-gpu-operator
-version: v1.0.0
+version: 1.0.0

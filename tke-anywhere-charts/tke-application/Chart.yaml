@@ -3,4 +3,4 @@ appVersion: "0.1.1"
 description: A Helm chart for tke anywhere tke-application
 name: tke-application
 type: application
-version: 0.1.1
+version: 0.1.0

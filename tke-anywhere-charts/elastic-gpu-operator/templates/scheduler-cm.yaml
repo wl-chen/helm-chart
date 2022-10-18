@@ -1,0 +1,74 @@
+apiVersion: v1
+data:
+  entrypoint.sh: |-
+    #!/bin/sh
+    policyConfig="scheduler-policy-config.json"
+
+    restartFunc() {
+      mv manifests/kube-scheduler.yaml  .;
+      sleep 3;
+      cat kube-scheduler.yaml | grep ClusterFirstWithHostNet;
+      if [ $? != 0 ]; then
+        sed -i "/hostNetwork: true/a\  dnsPolicy: ClusterFirstWithHostNet" kube-scheduler.yaml;
+      fi
+      mv kube-scheduler.yaml manifests/;
+    }
+
+    addExtendersFunc() {
+      cat ${policyConfig} | python3 -c '''
+    import json;
+    import sys;
+    policy = json.load(sys.stdin);
+    qscheduler_extender = {"urlPrefix":"http://qgpu-scheduler.kube-system:12345/scheduler","filterVerb":"filter","prioritizeVerb":"priorities","bindVerb":"bind","weight":10,"nodeCacheCapable":True,"managedResources":[{"name":"tke.cloud.tencent.com/qgpu-core"},{"name":"tke.cloud.tencent.com/qgpu-memory"}]};
+    Scheduler = False;
+    for _, extender in enumerate(policy["extenders"]):
+      if extender["urlPrefix"] != qscheduler_extender["urlPrefix"]:
+        if True and "bindVerb" in extender.keys() and extender["bindVerb"] != "":
+          print("kube-scheduler policy already has bindVerb config, failed to edit scheduler config");
+          exit(1);
+      if extender["urlPrefix"] == qscheduler_extender["urlPrefix"]:
+        Scheduler = True;
+    if Scheduler == False:
+      policy["extenders"].append(qscheduler_extender);
+    with open("scheduler-policy-config.json", "w") as f:
+      json.dump(policy, f);
+    ''';
+      if [ $? -ne 0 ]; then
+        exit 1
+      fi
+      restartFunc;
+    }
+
+    removeExtendersFunc() {
+      cat ${policyConfig} | python3 -c '''
+    import json;
+    import sys;
+    policy = json.load(sys.stdin);
+    qscheduler_extender = {"urlPrefix":"http://qgpu-scheduler.kube-system:12345/scheduler","filterVerb":"filter","prioritizeVerb":"priorities","bindVerb":"bind","weight":10,"nodeCacheCapable":True,"managedResources":[{"name":"tke.cloud.tencent.com/qgpu-core"},{"name":"tke.cloud.tencent.com/qgpu-memory"}]};
+    for _, extender in enumerate(policy["extenders"]):
+      if extender["urlPrefix"] == qscheduler_extender["urlPrefix"]:
+        policy["extenders"].remove(extender);
+    with open("scheduler-policy-config.json", "w") as f:
+      json.dump(policy, f);
+    ''';
+      restartFunc;
+    }
+
+    cd /etc/kubernetes;
+    cp ${policyConfig} ${policyConfig}.bak;
+    if [ "$1" = "addExtenders" ]; then
+      echo "add kube-scheduler extenders policy config and restore"
+      addExtendersFunc
+      exit 0
+    elif [ "$1" = "removeExtenders" ]; then
+      echo "remove kube-scheduler extenders policy config and restore"
+      removeExtendersFunc
+      exit 0
+    else
+      echo "Invalid arguments"
+      exit 1
+    fi
+kind: ConfigMap
+metadata:
+  name: kube-scheduler-configmap
+  namespace: {{ .Release.Namespace }}

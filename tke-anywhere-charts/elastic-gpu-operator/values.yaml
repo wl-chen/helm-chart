@@ -18,8 +18,16 @@ daemonsets:
     operator: Exists
     effect: NoSchedule
 
+tolerations:
+- key: node-role.kubernetes.io/master
+  operator: Exists
+  effect: "NoSchedule"
+- key: node-role.kubernetes.io/control-plane
+  operator: Exists
+  effect: "NoSchedule"
+
 global:
-  repository: "tkestack"
+  repository: "ccr.ccs.tencentyun.com/tdccimages"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
 
@@ -261,13 +269,13 @@ qgpu:
   enabled: true
   scheduler:
     image: qgpu-scheduler
-    version: v1.0.3
+    version: v1.0.7
     priority: binpack
     svcClusterIp: ""
   manager:
     image: qgpu-manager
-    version: v1.0.4-private
-    modifyKernelReboot: "false"
+    version: v1.0.8
+    modifyKernelReboot: "true"
     kubeletRootDir: "/var/lib/kubelet"
     labelEnabled: false
   license_server:
@@ -279,4 +287,8 @@ exporter:
   image: elastic-gpu-exporter
   version: v1.0.5
 
-cgroupDriver: cgroupfs
+job:
+  image: kubectl
+  version: 1.22.7
+
+cgroupDriver: systemd

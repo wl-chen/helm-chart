@@ -11,7 +11,7 @@ subjects:
   namespace: kube-system
 - kind: ServiceAccount
   name: node-feature-discovery
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: gpu-operator

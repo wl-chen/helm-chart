@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: elastic-gpu-operator
-  namespace: kube-system
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/component: "gpu-operator"
     {{ $.Release.labels }}
