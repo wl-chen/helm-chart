@@ -1,6 +1,6 @@
 apiVersion: v2
-name: tke-storage
-description: A Helm chart for tke anywhere storage provisioner
+name: kubevirt-hostpath-provisioner
+description: A Helm chart for anywhere kubevirt-hostpath-provisioner
 
 # A chart can be either an 'application' or a 'library' chart.
 #
@@ -12,26 +12,13 @@ description: A Helm chart for tke anywhere storage provisioner
 # pipeline. Library charts do not define any templates and therefore cannot be deployed.
 type: application
 
-dependencies: # chart 必要条件列表 （可选）
-  - name: ceph-csi-cephfs
-    version: 3.6.0
-    condition: global.enableCephFS
-    repository: https://ceph.github.io/csi-charts
-  - name: nfs-subdir-external-provisioner
-    version: 4.0.16
-    condition: global.enableNFS
-    repository: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-  - name: kubevirt-hostpath-provisioner
-    version: 0.14.0
-    condition: global.enableHostpathProvisioner
-
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.2
+version: 0.14.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "0.1.2"
+appVersion: "0.14.0"

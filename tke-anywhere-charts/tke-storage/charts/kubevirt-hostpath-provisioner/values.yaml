@@ -1,0 +1,110 @@
+csiDriver: 
+  attachRequired: false
+  storageCapacity: false
+  fsGroupPolicy: "None"
+  # Supports persistent volumes.
+  volumeLifecycleModes:
+  - Persistent
+  # To determine at runtime which mode a volume uses, pod info and its
+  # "csi.storage.k8s.io/ephemeral" entry are needed.
+  podInfoOnMount: true
+
+storageClass:
+  name: csi-hostpath-provisioner
+  reclaimPolicy: Retain
+  parameters:
+    storagePool: local
+
+selector:
+  matchLabels:
+    app.kubernetes.io/instance: hostpath.csi.kubevirt.io
+    app.kubernetes.io/part-of: csi-driver-host-path
+    app.kubernetes.io/name: csi-hostpathplugin
+    app.kubernetes.io/component: plugin
+
+podLabels:
+  app.kubernetes.io/instance: hostpath.csi.kubevirt.io
+  app.kubernetes.io/part-of: csi-driver-host-path
+  app.kubernetes.io/name: csi-hostpathplugin
+  app.kubernetes.io/component: plugin
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+      - matchExpressions:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+
+tolerations:
+- key: node-role.kubernetes.io/master
+  operator: Exists
+  effect: "NoSchedule"
+- key: node-role.kubernetes.io/control-plane
+  operator: Exists
+  effect: "NoSchedule"
+
+nodeHostPath: /var/lib/csi-hostpath-data/
+
+registry: ccr.ccs.tencentyun.com
+
+hostpathProvisioner:
+  image: 
+    repository: tdccimages/hostpath-csi-driver
+    tag: v0.14.1
+    imagePullPolicy: IfNotPresent
+  args:
+  - --drivername=kubevirt.io.hostpath-provisioner
+  - --v=3
+  - --endpoint=$(CSI_ENDPOINT)
+  - --nodeid=$(NODE_NAME)
+  - --version=$(VERSION)
+  - --datadir=[{"name":"local","path":"/csi-data-dir"}]
+
+csiExternalHealthMonitorController:
+  image: 
+    repository: tdccimages/csi-external-health-monitor-controller
+    tag: v0.3.0
+    imagePullPolicy: IfNotPresent
+  args:
+    - --v=3
+    - --csi-address=$(ADDRESS)
+    - --leader-election
+
+nodeDriverRegistrar:
+  image: 
+    repository: tdccimages/csi-node-driver-registrar
+    tag: v2.2.0
+    imagePullPolicy: IfNotPresent
+  args:
+    - --v=3
+    - --csi-address=/csi/csi.sock
+    - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-hostpath/csi.sock
+
+livenessProbe:
+  image: 
+    repository: tdccimages/livenessprobe
+    tag: v2.3.0
+    imagePullPolicy: IfNotPresent
+  args:
+    - --csi-address=/csi/csi.sock
+    - --health-port=9898
+
+csiProvisioner:
+  image: 
+    repository: tdccimages/csi-provisioner
+    tag: v2.2.1
+    imagePullPolicy: IfNotPresent
+  args:
+    - --v=5
+    - --csi-address=/csi/csi.sock
+    - --feature-gates=Topology=true
+    - --enable-capacity=true
+    - --capacity-for-immediate-binding=true
+    - --extra-create-metadata=true
+    - --immediate-topology=false
+    - --strict-topology=true
+    - --node-deployment=true

@@ -3,71 +3,11 @@ global:
   enableCephFS: false
   enableHostpathProvisioner: true
 
-hostpath-provisioner:
-  strategyType: Recreate
-
-  image:
-    repository: ccr.ccs.tencentyun.com/tdccimages/hostpath-provisioner
-    # Note that by default we use appVersion to get image tag
-    # tag:
-    pullPolicy: IfNotPresent
-
-  ## For creating the StorageClass automatically:
+kubevirt-hostpath-provisioner:
+  registry: ccr.ccs.tencentyun.com
   storageClass:
-    create: true
-
-    ## Set StorageClass as the default StorageClass
-    ## Ignored if storageClass.create is false
-    defaultClass: true
-
-    ## Set a StorageClass name
     name: anywhere-sc
-
-  ## Set the provisioner name
-  provisionerName: hostpath
-
-  ## Set the reclaimPolicy
-  reclaimPolicy: Retain
-
-  ## Set the local HostPath to be used on the node
   nodeHostPath: /var/lib/tke-anywhere
-
-  ## Node selector
-  nodeSelector: {}
-
-  ## Affinity
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-          - matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: Exists
-
-  ## Tolerations
-  tolerations: 
-    - key: node-role.kubernetes.io/master
-      operator: Exists
-      effect: "NoSchedule"
-    - key: node-role.kubernetes.io/control-plane
-      operator: Exists
-      effect: "NoSchedule"
-
-  rbac:
-    create: true
-    ## Ignored if rbac.create is true
-    serviceAccountName: default
-
-  resources:
-    limits:
-      cpu: 100m
-      memory: 128Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
   
 nfs-subdir-external-provisioner:
   replicaCount: 3
@@ -106,7 +46,7 @@ nfs-subdir-external-provisioner:
     allowVolumeExpansion: true
 
     # Method used to reclaim an obsoleted volume
-    reclaimPolicy: Delete
+    reclaimPolicy: Retain
 
     # When set to false your PVs will not be archived by the provisioner upon deletion of the PVC.
     archiveOnDelete: true
@@ -492,7 +432,7 @@ ceph-csi-cephfs:
     controllerExpandSecretNamespace: ""
     nodeStageSecret: csi-cephfs-secret
     nodeStageSecretNamespace: ""
-    reclaimPolicy: Delete
+    reclaimPolicy: Retain
     allowVolumeExpansion: true
     mountOptions: []
     # Mount Options
