@@ -59,13 +59,9 @@ certificate:
   serverCertDuration: 876000h
   serverCertRenewBefore: 875900h
   mountPath: /etc/kubernetes/pki
-  dnsNames:
-    - tke-gateway
-    - tke.anywhere
-    - registry.tke.com
-    - "*.registry.tke.com"
-  uris: 
-  ipAddresses:
+  dnsNames: []
+  uris: []
+  ipAddresses: []
 kubectl:
   image:
     repository: tdccimages/kubectl

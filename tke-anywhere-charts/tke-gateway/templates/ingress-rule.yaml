@@ -21,16 +21,16 @@ spec:
         - tke.anywhere
         - registry.tke.com
         - "*.registry.tke.com"
-{{ if .Values.certificate.dnsNames }}
+{{- if .Values.certificate.dnsNames }}
 {{ toYaml .Values.certificate.dnsNames | indent 8 }}
-{{ end }} 
-{{ if .Values.certificate.uris }}
+{{- end }} 
+{{- if .Values.certificate.uris }}
 {{ toYaml .Values.certificate.uris | indent 8 }}
-{{ end }}
+{{- end }}
         - 127.0.0.1
-{{ if .Values.certificate.ipAddresses }}
+{{- if .Values.certificate.ipAddresses }}
 {{ toYaml .Values.certificate.ipAddresses | indent 8 }}
-{{ end }}
+{{- end }}
       secretName: tke-gateway-server-secret
   rules:
     - host: "registry.tke.com"
@@ -73,6 +73,18 @@ spec:
                 name: tke-gateway
                 port:
                   number: 80
+{{- range .Values.certificate.dnsNames }}
+    - host: {{ . }}
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: tke-gateway
+                port:
+                  number: 80
+{{- end }}
 {{- with .Values.ingress.rules }}
 {{ toYaml . | indent 4 }}
 {{- end }}
